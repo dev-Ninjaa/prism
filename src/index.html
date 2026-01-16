@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRISM</title>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/components/sidebar.css">
+    <link rel="stylesheet" href="styles/components/request-bar.css">
+    <link rel="stylesheet" href="styles/components/tabs.css">
+    <link rel="stylesheet" href="styles/components/response.css">
+    <link rel="stylesheet" href="styles/components/buttons.css">
+    <link rel="stylesheet" href="styles/theme-dark.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>History</h2>
+                <button class="btn-icon" id="clearHistory" title="Clear history">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M2 4h12M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1m2 0v9a2 2 0 01-2 2h-5a2 2 0 01-2-2V4h9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">No requests yet</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Request Bar -->
+            <section class="request-bar">
+                <div class="request-controls">
+                    <select class="method-select" id="methodSelect">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                    <input 
+                        type="text" 
+                        class="url-input" 
+                        id="urlInput" 
+                        placeholder="https://api.example.com/endpoint"
+                        value="https://jsonplaceholder.typicode.com/users/1"
+                    >
+                    <button class="btn-primary btn-send" id="sendBtn">
+                        <span class="btn-text">Send</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg class="spinner" width="16" height="16" viewBox="0 0 16 16">
+                                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2" fill="none" stroke-dasharray="30" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                    </button>
+                    <button class="btn-secondary" id="exportCurlBtn" title="Copy as cURL">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M13.5 2h-11C1.67 2 1 2.67 1 3.5v9c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5v-9c0-.83-.67-1.5-1.5-1.5zm-11 1h11c.28 0 .5.22.5.5v1.5H2V3.5c0-.28.22-.5.5-.5zm11 10h-11c-.28 0-.5-.22-.5-.5V6h12v6.5c0 .28-.22.5-.5.5z" fill="currentColor"/>
+                            <path d="M4 8h2v1H4zm3 0h5v1H7zm-3 2h5v1H4z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-secondary" id="saveRequestBtn" title="Save Request">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M13 2H3c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 1v3H4V3h8zM3 13V7h10v6H3z" fill="currentColor"/>
+                            <path d="M5 4h1v2H5zm5 6H6v3h4v-3z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-secondary" id="loadRequestBtn" title="Load Request">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M13 2H3c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 11H3V3h10v10z" fill="currentColor"/>
+                            <path d="M11 7H9V5H7v2H5l3 3 3-3z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Request Editor -->
+            <section class="request-editor">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="params">Params</button>
+                    <button class="tab-btn" data-tab="auth">Auth</button>
+                    <button class="tab-btn" data-tab="headers">Headers</button>
+                    <button class="tab-btn" data-tab="body">Body</button>
+                    <button class="tab-btn" data-tab="env">Env</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Params Tab -->
+                    <div class="tab-panel active" id="paramsPanel">
+                        <div class="key-value-editor">
+                            <div class="kv-row">
+                                <input type="checkbox" checked>
+                                <input type="text" placeholder="key" value="userId">
+                                <input type="text" placeholder="value" value="123">
+                                <button class="btn-icon-small">×</button>
+                            </div>
+                            <button class="btn-secondary btn-add">+ Add Parameter</button>
+                        </div>
+                    </div>
+
+                    <!-- Auth Tab -->
+                    <div class="tab-panel" id="authPanel">
+                        <div class="auth-selector">
+                            <label>Auth Type</label>
+                            <select class="auth-type-select" id="authTypeSelect">
+                                <option value="none">No Auth</option>
+                                <option value="bearer">Bearer Token</option>
+                                <option value="apikey">API Key</option>
+                                <option value="basic">Basic Auth</option>
+                            </select>
+                        </div>
+                        <div class="auth-fields" id="authFields">
+                            <div class="empty-state">No authentication</div>
+                        </div>
+                    </div>
+
+                    <!-- Headers Tab -->
+                    <div class="tab-panel" id="headersPanel">
+                        <div class="key-value-editor">
+                            <div class="kv-row">
+                                <input type="checkbox" checked>
+                                <input type="text" placeholder="key" value="Content-Type">
+                                <input type="text" placeholder="value" value="application/json">
+                                <button class="btn-icon-small">×</button>
+                            </div>
+                            <button class="btn-secondary btn-add">+ Add Header</button>
+                        </div>
+                    </div>
+
+                    <!-- Body Tab -->
+                    <div class="tab-panel" id="bodyPanel">
+                        <textarea class="body-editor" placeholder='{\n  "key": "value"\n}'></textarea>
+                    </div>
+
+                    <!-- Env Tab -->
+                    <div class="tab-panel" id="envPanel">
+                        <div class="env-info">
+                            <p>Use <code>{{'{{'}}VARIABLE{{'}}'}}</code> syntax in URL, headers, body, and auth fields.</p>
+                        </div>
+                        <div class="key-value-editor" id="envVarsList">
+                            <!-- Env vars will be rendered here -->
+                        </div>
+                        <button class="btn-secondary btn-add" id="addEnvVarBtn">+ Add Variable</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Response Viewer -->
+            <section class="response-viewer" id="responseViewer" style="display: none;">
+                <div class="response-header">
+                    <div class="response-meta">
+                        <span class="status-badge" id="statusBadge">200 OK</span>
+                        <span class="meta-item">Time: <strong id="responseTime">245ms</strong></span>
+                        <span class="meta-item">Size: <strong id="responseSize">1.2 KB</strong></span>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="response-body">Body</button>
+                    <button class="tab-btn" data-tab="response-headers">Headers</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Response Body -->
+                    <div class="tab-panel active" id="responseBodyPanel">
+                        <pre class="response-body"><code id="responseBody"></code></pre>
+                    </div>
+
+                    <!-- Response Headers -->
+                    <div class="tab-panel" id="responseHeadersPanel">
+                        <pre class="response-body"><code id="responseHeaders"></code></pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/state.js"></script>
+    <script src="scripts/mock/mockResponse.js"></script>
+    <script src="scripts/ui/sidebar.js"></script>
+    <script src="scripts/ui/requestBar.js"></script>
+    <script src="scripts/ui/tabs.js"></script>
+    <script src="scripts/ui/responseView.js"></script>
+    <script src="scripts/ui/authForm.js"></script>
+    <script src="scripts/ui/envVars.js"></script>
+    <script src="scripts/app.js"></script>
+</body>
+</html>
