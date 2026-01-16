@@ -1,0 +1,29 @@
+/* Dark theme is default - this file can be used for theme overrides or variants */
+
+body {
+    background: var(--bg-root);
+}
+
+/* Selection */
+::selection {
+    background: var(--accent-muted);
+    color: var(--text-primary);
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* Smooth transitions for theme changes (future light mode) */
+* {
+    transition-property: background-color, border-color, color;
+    transition-duration: var(--transition-base);
+    transition-timing-function: ease;
+}
+
+/* Prevent transition on page load */
+.no-transition * {
+    transition: none !important;
+}
