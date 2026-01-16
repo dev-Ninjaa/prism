@@ -1,0 +1,80 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Tauri
+src-tauri/target/
+src-tauri/WixTools/
+
+# Build outputs
+*.exe
+*.dmg
+*.app
+*.AppImage
+*.deb
+*.rpm
+*.msi
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Local environment
+.env
+.env.local
+
+# Node (if used)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Database files (user data)
+*.db
+*.db-shm
+*.db-wal
+
+# Test outputs
+test-*.json
+local-*.json
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+
+# Coverage
+*.profraw
+*.profdata
+coverage/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Editor configs (keep .editorconfig)
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
