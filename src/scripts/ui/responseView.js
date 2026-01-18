@@ -17,8 +17,12 @@ function renderResponse(response) {
 
     // Body
     if (response.body) {
-        const formatted = formatJSON(response.body);
-        responseBody.innerHTML = formatted;
+        if (typeof response.body === 'string') {
+            responseBody.textContent = response.body;
+        } else {
+            const formatted = formatJSON(response.body);
+            responseBody.innerHTML = formatted;
+        }
     } else {
         responseBody.textContent = '(No content)';
     }
