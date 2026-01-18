@@ -1,18 +1,29 @@
 // Main application bootstrap
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load persisted data
-    await loadHistory();
-    await loadEnvVars();
+    console.log('DOM Content Loaded - Initializing modules');
     
-    // Initialize all modules
-    initSidebar();
-    initRequestBar();
-    initTabs();
-    initAuthForm();
-    renderEnvVars();
+    // Initialize UI modules first (non-blocking)
+    try {
+        initSidebar();
+        initRequestBar();
+        initTabs();
+        initAuthForm();
+    } catch (e) {
+        console.error('Module initialization failed:', e);
+    }
+
+    // Load data in background
+    loadHistory().then(() => {
+        console.log('History loaded');
+        renderHistory();
+    });
+    
+    loadEnvVars().then(() => {
+        console.log('Env vars loaded');
+        renderEnvVars();
+    });
 
     console.log('🚀 Prism initialized');
-    console.log('State:', state);
 });
 
 // Keyboard shortcuts
