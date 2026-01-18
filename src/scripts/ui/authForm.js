@@ -19,29 +19,29 @@ function renderAuthFields(authType) {
         bearer: `
             <div class="auth-field">
                 <label>Token</label>
-                <input type="password" id="bearerToken" placeholder="Enter bearer token" />
+                <input type="password" id="bearerToken" placeholder="Enter bearer token" value="${escapeHtml(state.request.auth.token)}" />
             </div>
         `,
         
         apikey: `
             <div class="auth-field">
                 <label>Key</label>
-                <input type="text" id="apiKey" placeholder="e.g., X-API-Key" />
+                <input type="text" id="apiKey" placeholder="e.g., X-API-Key" value="${escapeHtml(state.request.auth.apiKey)}" />
             </div>
             <div class="auth-field">
                 <label>Value</label>
-                <input type="password" id="apiValue" placeholder="Enter API key value" />
+                <input type="password" id="apiValue" placeholder="Enter API key value" value="${escapeHtml(state.request.auth.apiValue)}" />
             </div>
         `,
         
         basic: `
             <div class="auth-field">
                 <label>Username</label>
-                <input type="text" id="basicUsername" placeholder="Enter username" />
+                <input type="text" id="basicUsername" placeholder="Enter username" value="${escapeHtml(state.request.auth.username)}" />
             </div>
             <div class="auth-field">
                 <label>Password</label>
-                <input type="password" id="basicPassword" placeholder="Enter password" />
+                <input type="password" id="basicPassword" placeholder="Enter password" value="${escapeHtml(state.request.auth.password)}" />
             </div>
         `
     };
