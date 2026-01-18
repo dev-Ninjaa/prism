@@ -50,7 +50,7 @@
                         class="url-input" 
                         id="urlInput" 
                         placeholder="https://api.example.com/endpoint"
-                        value="https://jsonplaceholder.typicode.com/users/1"
+                        value=""
                     >
                     <button class="btn-primary btn-send" id="sendBtn">
                         <span class="btn-text">Send</span>
@@ -94,15 +94,10 @@
                 <div class="tab-content">
                     <!-- Params Tab -->
                     <div class="tab-panel active" id="paramsPanel">
-                        <div class="key-value-editor">
-                            <div class="kv-row">
-                                <input type="checkbox" checked>
-                                <input type="text" placeholder="key" value="userId">
-                                <input type="text" placeholder="value" value="123">
-                                <button class="btn-icon-small">×</button>
-                            </div>
-                            <button class="btn-secondary btn-add">+ Add Parameter</button>
+                        <div class="key-value-editor" id="paramsList">
+                            <!-- Params will be rendered here -->
                         </div>
+                        <button class="btn-secondary btn-add" id="addParamBtn">+ Add Parameter</button>
                     </div>
 
                     <!-- Auth Tab -->
@@ -123,15 +118,10 @@
 
                     <!-- Headers Tab -->
                     <div class="tab-panel" id="headersPanel">
-                        <div class="key-value-editor">
-                            <div class="kv-row">
-                                <input type="checkbox" checked>
-                                <input type="text" placeholder="key" value="Content-Type">
-                                <input type="text" placeholder="value" value="application/json">
-                                <button class="btn-icon-small">×</button>
-                            </div>
-                            <button class="btn-secondary btn-add">+ Add Header</button>
+                        <div class="key-value-editor" id="headersList">
+                            <!-- Headers will be rendered here -->
                         </div>
+                        <button class="btn-secondary btn-add" id="addHeaderBtn">+ Add Header</button>
                     </div>
 
                     <!-- Body Tab -->
@@ -184,7 +174,6 @@
 
     <!-- Scripts -->
     <script src="scripts/state.js"></script>
-    <script src="scripts/mock/mockResponse.js"></script>
     <script src="scripts/ui/sidebar.js"></script>
     <script src="scripts/ui/requestBar.js"></script>
     <script src="scripts/ui/tabs.js"></script>
