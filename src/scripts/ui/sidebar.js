@@ -34,23 +34,35 @@ function renderHistory() {
 }
 
 function loadHistoryItem(item) {
-    document.getElementById('methodSelect').value = item.method;
-    document.getElementById('urlInput').value = item.url;
-    updateRequest({ method: item.method, url: item.url });
+    if (!item || !item.request) return;
+    
+    // Set the request state
+    state.request = JSON.parse(JSON.stringify(item.request));
+    
+    // Update UI elements
+    document.getElementById('methodSelect').value = state.request.method;
+    document.getElementById('urlInput').value = state.request.url;
+    document.querySelector('.body-editor').value = state.request.body || '';
+    
+    // Update tabs
+    renderParams();
+    renderHeaders();
+    renderAuth();
 }
 
 async function initSidebar() {
-    await loadHistory();
-    renderHistory();
-
-    document.getElementById('clearHistory').addEventListener('click', async () => {
-        if (confirm('Clear all history?')) {
-            try {
-                await clearHistory();
-                renderHistory();
-            } catch (e) {
-                alert('Failed to clear history: ' + e);
+    // History is loaded by app.js, we just attach listeners here
+    const clearBtn = document.getElementById('clearHistory');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', async () => {
+            if (confirm('Clear all history?')) {
+                try {
+                    await clearHistory();
+                    renderHistory();
+                } catch (e) {
+                    alert('Failed to clear history: ' + e);
+                }
             }
-        }
-    });
+        });
+    }
 }
