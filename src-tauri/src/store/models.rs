@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use crate::models::{ApiRequest, ApiResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HistoryEntry {
@@ -9,20 +10,24 @@ pub struct HistoryEntry {
     #[serde(rename = "time")]
     pub time_ms: u128,
     pub timestamp: i64,
+    pub request: ApiRequest,
+    pub response: ApiResponse,
 }
 
 impl HistoryEntry {
-    pub fn new(method: String, url: String, status: u16, time_ms: u128) -> Self {
+    pub fn new(request: ApiRequest, response: ApiResponse) -> Self {
         let timestamp = chrono::Utc::now().timestamp_millis();
         let id = format!("{}-{}", timestamp, uuid_simple());
         
         Self {
             id,
-            method,
-            url,
-            status,
-            time_ms,
+            method: request.method.clone(),
+            url: request.url.clone(),
+            status: response.status,
+            time_ms: response.time,
             timestamp,
+            request,
+            response,
         }
     }
 }
@@ -32,7 +37,7 @@ fn uuid_simple() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .subsec_nanos();
+        .map(|d| d.subsec_nanos())
+        .unwrap_or(0);
     format!("{:x}", nanos)
 }
