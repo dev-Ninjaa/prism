@@ -30,12 +30,10 @@ async fn send_request(
     
     let response = engine::http::execute_request(resolved_req.clone()).await?;
     
-    // Save to history (use original URL for display)
+    // Save to history (use original request for full restoration)
     let entry = HistoryEntry::new(
-        req.method,
-        req.url,
-        response.status,
-        response.time,
+        req,
+        response.clone(),
     );
     
     // Don't fail the request if history save fails
@@ -97,7 +95,7 @@ async fn save_request(app: AppHandle, req: ApiRequest) -> Result<(), String> {
         let path_str = match path {
             FilePath::Path(p) => p.to_str()
                 .ok_or_else(|| "Invalid file path".to_string())?.to_string(),
-            FilePath::Url(u) => return Err("URL paths not supported".to_string()),
+            FilePath::Url(_u) => return Err("URL paths not supported".to_string()),
         };
         
         save_request_to_file(req, &path_str)?;
@@ -121,7 +119,7 @@ async fn load_request(app: AppHandle) -> Result<ApiRequest, String> {
         let path_str = match path {
             FilePath::Path(p) => p.to_str()
                 .ok_or_else(|| "Invalid file path".to_string())?.to_string(),
-            FilePath::Url(u) => return Err("URL paths not supported".to_string()),
+            FilePath::Url(_u) => return Err("URL paths not supported".to_string()),
         };
         
         let request = load_request_from_file(&path_str)?;
@@ -188,18 +186,24 @@ fn main() {
         .setup(|app| {
             // Initialize database
             let app_data_dir = app.path().app_data_dir()
-                .expect("Failed to get app data directory");
+                .map_err(|e| format!("Failed to get app data directory: {}", e))?;
             
             std::fs::create_dir_all(&app_data_dir)
-                .expect("Failed to create app data directory");
+                .map_err(|e| format!("Failed to create app data directory: {}", e))?;
             
             let history_db_path = app_data_dir.join("history.db");
-            let store = Store::new(history_db_path.to_str().unwrap())
-                .expect("Failed to initialize store");
+            let history_db_str = history_db_path.to_str()
+                .ok_or_else(|| "Invalid history database path".to_string())?;
+            
+            let store = Store::new(history_db_str)
+                .map_err(|e| format!("Failed to initialize history store: {}", e))?;
             
             let env_db_path = app_data_dir.join("env.db");
-            let env_store = EnvStore::new(env_db_path.to_str().unwrap())
-                .expect("Failed to initialize env store");
+            let env_db_str = env_db_path.to_str()
+                .ok_or_else(|| "Invalid env database path".to_string())?;
+            
+            let env_store = EnvStore::new(env_db_str)
+                .map_err(|e| format!("Failed to initialize env store: {}", e))?;
             
             let app_state = AppState {
                 store: Arc::new(store),

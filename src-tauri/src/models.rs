@@ -8,7 +8,7 @@ pub struct KeyValue {
     pub value: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AuthPayload {
     #[serde(rename = "type")]
     pub auth_type: String,
@@ -17,6 +17,8 @@ pub struct AuthPayload {
     pub api_key: Option<String>,
     #[serde(rename = "apiValue")]
     pub api_value: Option<String>,
+    #[serde(rename = "apiLocation")]
+    pub api_location: Option<String>,
     pub username: Option<String>,
     pub password: Option<String>,
 }
@@ -33,7 +35,7 @@ pub struct ApiRequest {
     pub auth: AuthPayload,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiResponse {
     pub status: u16,
     #[serde(rename = "statusText")]
