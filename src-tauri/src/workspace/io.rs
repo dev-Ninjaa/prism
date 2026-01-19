@@ -39,7 +39,7 @@ pub fn load_request_from_file(path: &str) -> Result<ApiRequest, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{AuthPayload, KeyValue};
+    use crate::models::{AuthPayload};
     use std::fs;
 
     #[test]
@@ -53,14 +53,7 @@ mod tests {
             params: vec![],
             headers: vec![],
             body: None,
-            auth: AuthPayload {
-                auth_type: "none".to_string(),
-                token: None,
-                api_key: None,
-                api_value: None,
-                username: None,
-                password: None,
-            },
+            auth: AuthPayload::default(),
         };
         
         // Save
