@@ -1,0 +1,12 @@
+{
+  "name": "prism-test-api",
+  "version": "1.0.0",
+  "description": "Deterministic test API for Prism",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
