@@ -14,7 +14,7 @@ pub fn to_curl(req: &ApiRequest) -> String {
     parts.push(format!("'{}'", escape_single_quotes(&full_url)));
 
     // Add headers
-    for header in req.headers.iter().filter(|h| h.enabled) {
+    for header in req.headers.iter().filter(|h| h.enabled && !h.key.trim().is_empty()) {
         parts.push(format!(
             "-H '{}: {}'",
             escape_single_quotes(&header.key),
@@ -25,15 +25,18 @@ pub fn to_curl(req: &ApiRequest) -> String {
     // Add authentication
     add_auth_to_curl(&mut parts, req);
 
-    // Add body if present
-    if let Some(body) = &req.body {
-        if !body.trim().is_empty() {
-            // Add Content-Type header if not already present and body looks like JSON
-            if !has_content_type_header(req) && is_json_body(body) {
-                parts.push("-H 'Content-Type: application/json'".to_string());
+    // Add body if present and method allows it
+    let method_upper = req.method.to_uppercase();
+    if method_upper != "GET" && method_upper != "DELETE" {
+        if let Some(body) = &req.body {
+            if !body.trim().is_empty() {
+                // Add Content-Type header if not already present and body looks like JSON
+                if !has_content_type_header(req) && is_json_body(body) {
+                    parts.push("-H 'Content-Type: application/json'".to_string());
+                }
+                
+                parts.push(format!("-d '{}'", escape_single_quotes(body)));
             }
-            
-            parts.push(format!("-d '{}'", escape_single_quotes(body)));
         }
     }
 
@@ -44,17 +47,27 @@ pub fn to_curl(req: &ApiRequest) -> String {
 fn build_url_with_params(req: &ApiRequest) -> String {
     let mut url = req.url.clone();
     
-    let enabled_params: Vec<_> = req.params.iter()
-        .filter(|p| p.enabled)
+    let mut enabled_params: Vec<(String, String)> = req.params.iter()
+        .filter(|p| p.enabled && !p.key.trim().is_empty())
+        .map(|p| (p.key.clone(), p.value.clone()))
         .collect();
+    
+    // Add API key if it's in query
+    if req.auth.auth_type == "apikey" {
+        if let (Some(key), Some(value)) = (&req.auth.api_key, &req.auth.api_value) {
+            if !key.trim().is_empty() && req.auth.api_location.as_deref().unwrap_or("header") == "query" {
+                enabled_params.push((key.clone(), value.clone()));
+            }
+        }
+    }
     
     if !enabled_params.is_empty() {
         let separator = if url.contains('?') { '&' } else { '?' };
         let params_str = enabled_params
             .iter()
-            .map(|p| format!("{}={}", 
-                urlencoding::encode(&p.key), 
-                urlencoding::encode(&p.value)
+            .map(|(k, v)| format!("{}={}", 
+                urlencoding::encode(k), 
+                urlencoding::encode(v)
             ))
             .collect::<Vec<_>>()
             .join("&");
@@ -69,7 +82,7 @@ fn add_auth_to_curl(parts: &mut Vec<String>, req: &ApiRequest) {
     match req.auth.auth_type.as_str() {
         "bearer" => {
             if let Some(token) = &req.auth.token {
-                if !token.is_empty() {
+                if !token.is_empty() && !has_header(req, "authorization") {
                     parts.push(format!(
                         "-H 'Authorization: Bearer {}'",
                         escape_single_quotes(token)
@@ -79,18 +92,20 @@ fn add_auth_to_curl(parts: &mut Vec<String>, req: &ApiRequest) {
         }
         "apikey" => {
             if let (Some(key), Some(value)) = (&req.auth.api_key, &req.auth.api_value) {
-                if !key.is_empty() && !value.is_empty() {
-                    parts.push(format!(
-                        "-H '{}: {}'",
-                        escape_single_quotes(key),
-                        escape_single_quotes(value)
-                    ));
+                if !key.is_empty() && req.auth.api_location.as_deref().unwrap_or("header") == "header" {
+                    if !has_header(req, key) {
+                        parts.push(format!(
+                            "-H '{}: {}'",
+                            escape_single_quotes(key),
+                            escape_single_quotes(value)
+                        ));
+                    }
                 }
             }
         }
         "basic" => {
             if let (Some(username), Some(password)) = (&req.auth.username, &req.auth.password) {
-                if !username.is_empty() {
+                if !username.is_empty() && !has_header(req, "authorization") {
                     parts.push(format!(
                         "-u '{}:{}'",
                         escape_single_quotes(username),
@@ -101,6 +116,12 @@ fn add_auth_to_curl(parts: &mut Vec<String>, req: &ApiRequest) {
         }
         _ => {} // "none" or unknown
     }
+}
+
+fn has_header(req: &ApiRequest, key: &str) -> bool {
+    req.headers.iter()
+        .filter(|h| h.enabled)
+        .any(|h| h.key.to_lowercase() == key.to_lowercase())
 }
 
 fn has_content_type_header(req: &ApiRequest) -> bool {
@@ -149,14 +170,7 @@ mod tests {
             params: vec![],
             headers: vec![],
             body: None,
-            auth: AuthPayload {
-                auth_type: "none".to_string(),
-                token: None,
-                api_key: None,
-                api_value: None,
-                username: None,
-                password: None,
-            },
+            auth: AuthPayload::default(),
         };
 
         let curl = to_curl(&req);
@@ -172,14 +186,7 @@ mod tests {
             params: vec![],
             headers: vec![],
             body: Some(r#"{"name":"John"}"#.to_string()),
-            auth: AuthPayload {
-                auth_type: "none".to_string(),
-                token: None,
-                api_key: None,
-                api_value: None,
-                username: None,
-                password: None,
-            },
+            auth: AuthPayload::default(),
         };
 
         let curl = to_curl(&req);
@@ -201,6 +208,7 @@ mod tests {
                 token: Some("secret-token".to_string()),
                 api_key: None,
                 api_value: None,
+                api_location: None,
                 username: None,
                 password: None,
             },
@@ -224,14 +232,7 @@ mod tests {
             ],
             headers: vec![],
             body: None,
-            auth: AuthPayload {
-                auth_type: "none".to_string(),
-                token: None,
-                api_key: None,
-                api_value: None,
-                username: None,
-                password: None,
-            },
+            auth: AuthPayload::default(),
         };
 
         let curl = to_curl(&req);
