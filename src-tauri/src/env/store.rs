@@ -56,19 +56,4 @@ impl EnvStore {
         conn.execute("DELETE FROM env_vars WHERE key = ?1", [key])?;
         Ok(())
     }
-
-    pub fn get(&self, key: &str) -> SqlResult<Option<String>> {
-        let conn = self.conn.lock().unwrap();
-        let result = conn.query_row(
-            "SELECT value FROM env_vars WHERE key = ?1",
-            [key],
-            |row| row.get(0),
-        );
-
-        match result {
-            Ok(value) => Ok(Some(value)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e),
-        }
-    }
 }
