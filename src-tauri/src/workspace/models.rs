@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::models::{ApiRequest, KeyValue, AuthPayload};
+use crate::models::ApiRequest;
 
 /// Represents a saved request file
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,10 +9,6 @@ pub struct SavedRequest {
 }
 
 impl SavedRequest {
-    pub fn new(name: String, request: ApiRequest) -> Self {
-        Self { name, request }
-    }
-    
     pub fn from_request(request: ApiRequest) -> Self {
         // Generate a default name from method and URL
         let name = format!("{} {}", request.method, extract_endpoint(&request.url));
