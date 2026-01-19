@@ -13,14 +13,14 @@ pub async fn execute_request(req: ApiRequest) -> Result<ApiResponse, String> {
         .map_err(|e| format!("Invalid URL: {}", e))?;
 
     // Add query parameters
-    for param in req.params.iter().filter(|p| p.enabled) {
+    for param in req.params.iter().filter(|p| p.enabled && !p.key.trim().is_empty()) {
         url.query_pairs_mut()
             .append_pair(&param.key, &param.value);
     }
 
     // Build headers
     let mut headers = HeaderMap::new();
-    for header in req.headers.iter().filter(|h| h.enabled) {
+    for header in req.headers.iter().filter(|h| h.enabled && !h.key.trim().is_empty()) {
         if let (Ok(name), Ok(value)) = (
             HeaderName::from_str(&header.key),
             HeaderValue::from_str(&header.value),
@@ -34,7 +34,13 @@ pub async fn execute_request(req: ApiRequest) -> Result<ApiResponse, String> {
         .map_err(|e| format!("Auth error: {}", e))?;
 
     // Build HTTP client
+    let mut default_headers = HeaderMap::new();
+    default_headers.insert("Accept", HeaderValue::from_static("application/json, text/plain, */*"));
+    default_headers.insert("Accept-Language", HeaderValue::from_static("en-US,en;q=0.9"));
+    
     let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        .default_headers(default_headers)
         .timeout(std::time::Duration::from_secs(30))
         .build()
         .map_err(|e| format!("Failed to create client: {}", e))?;
@@ -43,13 +49,15 @@ pub async fn execute_request(req: ApiRequest) -> Result<ApiResponse, String> {
     let method = reqwest::Method::from_str(&req.method.to_uppercase())
         .map_err(|e| format!("Invalid HTTP method: {}", e))?;
 
-    let mut request_builder = client.request(method, url.as_str())
+    let mut request_builder = client.request(method.clone(), url.as_str())
         .headers(headers);
 
-    // Add body if present
-    if let Some(body) = req.body {
-        if !body.trim().is_empty() {
-            request_builder = request_builder.body(body);
+    // Add body if present and method allows it
+    if method != reqwest::Method::GET && method != reqwest::Method::DELETE {
+        if let Some(body) = req.body {
+            if !body.trim().is_empty() {
+                request_builder = request_builder.body(body);
+            }
         }
     }
 
