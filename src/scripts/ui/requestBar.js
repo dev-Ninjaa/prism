@@ -21,12 +21,28 @@ function initRequestBar() {
         });
 
         urlInput.addEventListener('input', (e) => {
-            updateRequest({ url: e.target.value });
+            const val = e.target.value;
+            updateRequest({ url: val });
+            
+            // Highlight unresolved
+            if (getUnresolvedVars(val).length > 0) {
+                urlInput.classList.add('unresolved-var');
+            } else {
+                urlInput.classList.remove('unresolved-var');
+            }
         });
 
         if (bodyEditor) {
             bodyEditor.addEventListener('input', (e) => {
-                updateRequest({ body: e.target.value });
+                const val = e.target.value;
+                updateRequest({ body: val });
+                
+                // Highlight unresolved
+                if (getUnresolvedVars(val).length > 0) {
+                    bodyEditor.classList.add('unresolved-var');
+                } else {
+                    bodyEditor.classList.remove('unresolved-var');
+                }
             });
         }
 
@@ -84,6 +100,61 @@ async function handleSendRequest() {
 
     if (!state.request.url || !state.request.url.trim()) {
         alert('Please enter a URL');
+        return;
+    }
+
+    // --- HARDENING: Body Validation ---
+    const method = state.request.method.toUpperCase();
+    if (method === 'GET' || method === 'DELETE') {
+        // Body ignored for GET/DELETE (handled in backend but good to know here)
+    } else {
+        // Check if it's supposed to be JSON (if Content-Type header exists)
+        const contentTypeHeader = state.request.headers.find(h => 
+            h.enabled && h.key.toLowerCase() === 'content-type'
+        );
+        if (contentTypeHeader && contentTypeHeader.value.includes('application/json')) {
+            if (!validateJson(state.request.body)) {
+                alert('Invalid JSON body');
+                return;
+            }
+        }
+    }
+
+    // --- HARDENING: Env Resolution Check ---
+    const unresolved = [];
+    unresolved.push(...getUnresolvedVars(state.request.url));
+    state.request.params.filter(p => p.enabled).forEach(p => {
+        unresolved.push(...getUnresolvedVars(p.key));
+        unresolved.push(...getUnresolvedVars(p.value));
+    });
+    state.request.headers.filter(h => h.enabled).forEach(h => {
+        unresolved.push(...getUnresolvedVars(h.key));
+        unresolved.push(...getUnresolvedVars(h.value));
+    });
+    unresolved.push(...getUnresolvedVars(state.request.body));
+    
+    // Auth vars
+    if (state.request.auth.type !== 'none') {
+        unresolved.push(...getUnresolvedVars(state.request.auth.token));
+        unresolved.push(...getUnresolvedVars(state.request.auth.apiKey));
+        unresolved.push(...getUnresolvedVars(state.request.auth.apiValue));
+        unresolved.push(...getUnresolvedVars(state.request.auth.username));
+        unresolved.push(...getUnresolvedVars(state.request.auth.password));
+    }
+
+    if (unresolved.length > 0) {
+        const uniqueUnresolved = [...new Set(unresolved)];
+        console.warn('Unresolved variables:', uniqueUnresolved);
+        // We don't block, but we could highlight UI here.
+    }
+
+    // --- HARDENING: Auth validation ---
+    if (state.request.auth.type === 'bearer' && !state.request.auth.token) {
+        alert('Bearer token is required');
+        return;
+    }
+    if (state.request.auth.type === 'basic' && (!state.request.auth.username || !state.request.auth.password)) {
+        alert('Username and password are required for Basic auth');
         return;
     }
 
@@ -250,14 +321,29 @@ function renderKVList(container, items, type) {
         return;
     }
 
-    container.innerHTML = items.map((item, index) => `
-        <div class="kv-row" data-index="${index}">
-            <input type="checkbox" ${item.enabled ? 'checked' : ''} class="kv-enabled">
-            <input type="text" placeholder="key" value="${escapeHtml(item.key)}" class="kv-key">
-            <input type="text" placeholder="value" value="${escapeHtml(item.value)}" class="kv-value">
-            <button class="btn-icon-small btn-delete-kv">×</button>
-        </div>
-    `).join('');
+    container.innerHTML = items.map((item, index) => {
+        const unresolvedKey = getUnresolvedVars(item.key).length > 0;
+        const unresolvedValue = getUnresolvedVars(item.value).length > 0;
+        
+        let displayKey = item.key;
+        if (type === 'headers' && item.key) {
+            // Normalize casing for display: Camel-Case-Headers
+            displayKey = item.key.split('-').map(part => 
+                part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+            ).join('-');
+        }
+        
+        return `
+            <div class="kv-row" data-index="${index}">
+                <input type="checkbox" ${item.enabled ? 'checked' : ''} class="kv-enabled">
+                <input type="text" placeholder="key" value="${escapeHtml(displayKey)}" 
+                       class="kv-key ${unresolvedKey ? 'unresolved-var' : ''}">
+                <input type="text" placeholder="value" value="${escapeHtml(item.value)}" 
+                       class="kv-value ${unresolvedValue ? 'unresolved-var' : ''}">
+                <button class="btn-icon-small btn-delete-kv">×</button>
+            </div>
+        `;
+    }).join('');
 
     // Add listeners
     container.querySelectorAll('.kv-row').forEach(row => {
@@ -272,11 +358,36 @@ function renderKVList(container, items, type) {
         });
 
         keyInput.addEventListener('input', (e) => {
-            items[index].key = e.target.value;
+            const val = e.target.value;
+            items[index].key = val;
+            
+            // Highlight unresolved
+            if (getUnresolvedVars(val).length > 0) {
+                keyInput.classList.add('unresolved-var');
+            } else {
+                keyInput.classList.remove('unresolved-var');
+            }
+
+            // Warning for Content-Type override
+            if (type === 'headers' && val.toLowerCase() === 'content-type') {
+                keyInput.title = 'Warning: Overriding Content-Type may affect body parsing';
+                keyInput.style.color = 'var(--warning)';
+            } else {
+                keyInput.title = '';
+                keyInput.style.color = '';
+            }
         });
 
         valueInput.addEventListener('input', (e) => {
-            items[index].value = e.target.value;
+            const val = e.target.value;
+            items[index].value = val;
+            
+            // Highlight unresolved
+            if (getUnresolvedVars(val).length > 0) {
+                valueInput.classList.add('unresolved-var');
+            } else {
+                valueInput.classList.remove('unresolved-var');
+            }
         });
 
         deleteBtn.addEventListener('click', () => {

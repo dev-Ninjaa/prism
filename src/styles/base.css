@@ -67,3 +67,13 @@ button:focus-visible {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
 }
+
+.unresolved-var {
+    color: var(--warning) !important;
+    text-decoration: underline wavy var(--warning);
+}
+
+.unresolved-var::placeholder {
+    color: var(--warning);
+    opacity: 0.8;
+}

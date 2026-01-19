@@ -32,6 +32,13 @@ function renderAuthFields(authType) {
                 <label>Value</label>
                 <input type="password" id="apiValue" placeholder="Enter API key value" value="${escapeHtml(state.request.auth.apiValue)}" />
             </div>
+            <div class="auth-field">
+                <label>Add to</label>
+                <select id="apiLocation">
+                    <option value="header" ${state.request.auth.apiLocation === 'header' ? 'selected' : ''}>Header</option>
+                    <option value="query" ${state.request.auth.apiLocation === 'query' ? 'selected' : ''}>Query Params</option>
+                </select>
+            </div>
         `,
         
         basic: `
@@ -51,21 +58,42 @@ function renderAuthFields(authType) {
     // Add event listeners for auth inputs
     if (authType === 'bearer') {
         document.getElementById('bearerToken')?.addEventListener('input', (e) => {
-            updateAuth({ token: e.target.value });
+            const val = e.target.value;
+            updateAuth({ token: val });
+            highlightUnresolved(e.target, val);
         });
     } else if (authType === 'apikey') {
         document.getElementById('apiKey')?.addEventListener('input', (e) => {
-            updateAuth({ apiKey: e.target.value });
+            const val = e.target.value;
+            updateAuth({ apiKey: val });
+            highlightUnresolved(e.target, val);
         });
         document.getElementById('apiValue')?.addEventListener('input', (e) => {
-            updateAuth({ apiValue: e.target.value });
+            const val = e.target.value;
+            updateAuth({ apiValue: val });
+            highlightUnresolved(e.target, val);
+        });
+        document.getElementById('apiLocation')?.addEventListener('change', (e) => {
+            updateAuth({ apiLocation: e.target.value });
         });
     } else if (authType === 'basic') {
         document.getElementById('basicUsername')?.addEventListener('input', (e) => {
-            updateAuth({ username: e.target.value });
+            const val = e.target.value;
+            updateAuth({ username: val });
+            highlightUnresolved(e.target, val);
         });
         document.getElementById('basicPassword')?.addEventListener('input', (e) => {
-            updateAuth({ password: e.target.value });
+            const val = e.target.value;
+            updateAuth({ password: val });
+            highlightUnresolved(e.target, val);
         });
+    }
+}
+
+function highlightUnresolved(input, value) {
+    if (getUnresolvedVars(value).length > 0) {
+        input.classList.add('unresolved-var');
+    } else {
+        input.classList.remove('unresolved-var');
     }
 }

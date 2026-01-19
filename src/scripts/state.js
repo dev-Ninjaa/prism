@@ -11,6 +11,7 @@ const state = {
             token: '',
             apiKey: '',
             apiValue: '',
+            apiLocation: 'header', // Default to header
             username: '',
             password: ''
         }
@@ -95,4 +96,33 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Validation and Env Resolution Helpers
+function getUnresolvedVars(text) {
+    if (!text || typeof text !== 'string') return [];
+    const matches = text.match(/{{([^}]+)}}/g);
+    if (!matches) return [];
+    
+    const unresolved = [];
+    const envKeys = state.envVars.map(v => v.key);
+    
+    matches.forEach(match => {
+        const key = match.slice(2, -2);
+        if (!envKeys.includes(key)) {
+            unresolved.push(key);
+        }
+    });
+    
+    return unresolved;
+}
+
+function validateJson(text) {
+    if (!text || !text.trim()) return true;
+    try {
+        JSON.parse(text);
+        return true;
+    } catch (e) {
+        return false;
+    }
 }
