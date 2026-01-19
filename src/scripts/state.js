@@ -33,14 +33,6 @@ function setResponse(response) {
     state.response = response;
 }
 
-function addToHistory(item) {
-    // History is now managed by Rust, just update local state
-    state.history.unshift(item);
-    if (state.history.length > 50) {
-        state.history = state.history.slice(0, 50);
-    }
-}
-
 async function clearHistory() {
     try {
         const { invoke } = window.__TAURI__.core;
@@ -98,7 +90,8 @@ async function deleteEnvVar(key) {
 }
 
 function escapeHtml(text) {
-    if (typeof text !== 'string') return text;
+    if (text === null || text === undefined) return '';
+    if (typeof text !== 'string') return String(text);
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;

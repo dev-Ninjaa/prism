@@ -1,6 +1,5 @@
 // Request bar controls
 function initRequestBar() {
-    console.log('Initializing Request Bar...');
     try {
         const methodSelect = document.getElementById('methodSelect');
         const urlInput = document.getElementById('urlInput');
@@ -32,7 +31,6 @@ function initRequestBar() {
         }
 
         sendBtn.addEventListener('click', () => {
-            console.log('Send button clicked');
             handleSendRequest();
         });
 
@@ -75,14 +73,12 @@ function initRequestBar() {
         if (bodyEditor) bodyEditor.value = state.request.body;
         renderParams();
         renderHeaders();
-        console.log('Request Bar initialized successfully');
     } catch (e) {
         console.error('Failed to initialize Request Bar:', e);
     }
 }
 
 async function handleSendRequest() {
-    console.log('handleSendRequest called');
     const sendBtn = document.getElementById('sendBtn');
     const responseViewer = document.getElementById('responseViewer');
 
@@ -113,8 +109,6 @@ async function handleSendRequest() {
             throw new Error('Tauri invoke not found. Are you running in a web browser?');
         }
 
-        console.log('Invoking send_request with state:', JSON.stringify(state.request));
-        
         // Deep clone the request to avoid proxy/reference issues
         const requestPayload = JSON.parse(JSON.stringify(state.request));
         
@@ -122,7 +116,6 @@ async function handleSendRequest() {
             req: requestPayload
         });
         
-        console.log('Received response:', response);
         setResponse(response);
         
         // Reload history

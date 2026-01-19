@@ -36,18 +36,66 @@ function renderHistory() {
 function loadHistoryItem(item) {
     if (!item || !item.request) return;
     
-    // Set the request state
-    state.request = JSON.parse(JSON.stringify(item.request));
+    // Set the request and response state - deep clone to avoid modifying history
+    const restoredRequest = JSON.parse(JSON.stringify(item.request));
+    const restoredResponse = item.response ? JSON.parse(JSON.stringify(item.response)) : null;
+    
+    // Ensure all required fields exist (merge with defaults)
+    state.request = {
+        method: restoredRequest.method || 'GET',
+        url: restoredRequest.url || '',
+        params: restoredRequest.params || [],
+        headers: restoredRequest.headers || [],
+        body: restoredRequest.body || '',
+        auth: {
+            type: restoredRequest.auth?.type || 'none',
+            token: restoredRequest.auth?.token || '',
+            apiKey: restoredRequest.auth?.apiKey || '',
+            apiValue: restoredRequest.auth?.apiValue || '',
+            username: restoredRequest.auth?.username || '',
+            password: restoredRequest.auth?.password || ''
+        }
+    };
+
+    // Update response state
+    state.response = restoredResponse;
     
     // Update UI elements
-    document.getElementById('methodSelect').value = state.request.method;
-    document.getElementById('urlInput').value = state.request.url;
-    document.querySelector('.body-editor').value = state.request.body || '';
+    const methodSelect = document.getElementById('methodSelect');
+    const urlInput = document.getElementById('urlInput');
+    const bodyEditor = document.querySelector('.body-editor');
+    const responseViewer = document.getElementById('responseViewer');
     
-    // Update tabs
-    renderParams();
-    renderHeaders();
-    renderAuth();
+    if (methodSelect) methodSelect.value = state.request.method.toUpperCase();
+    if (urlInput) urlInput.value = state.request.url;
+    if (bodyEditor) bodyEditor.value = state.request.body;
+    
+    // Update tabs and dynamic lists
+    if (typeof renderParams === 'function') renderParams();
+    if (typeof renderHeaders === 'function') renderHeaders();
+    if (typeof renderAuth === 'function') renderAuth();
+    
+    // Render restored response if available
+    if (state.response) {
+        if (typeof renderResponse === 'function') renderResponse(state.response);
+        if (responseViewer) responseViewer.style.display = 'flex';
+    } else {
+        if (responseViewer) responseViewer.style.display = 'none';
+    }
+    
+    // Provide visual feedback
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        // Find the clicked item and add a temporary highlight
+        const items = sidebar.querySelectorAll('.history-item');
+        items.forEach(el => {
+            const index = parseInt(el.dataset.index);
+            if (state.history[index] === item) {
+                el.style.backgroundColor = 'var(--bg-tertiary)';
+                setTimeout(() => el.style.backgroundColor = '', 300);
+            }
+        });
+    }
 }
 
 async function initSidebar() {

@@ -1,7 +1,5 @@
 // Main application bootstrap
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOM Content Loaded - Initializing modules');
-    
     // Initialize UI modules first (non-blocking)
     try {
         initSidebar();
@@ -14,16 +12,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load data in background
     loadHistory().then(() => {
-        console.log('History loaded');
         renderHistory();
     });
     
     loadEnvVars().then(() => {
-        console.log('Env vars loaded');
         renderEnvVars();
     });
 
-    console.log('🚀 Prism initialized');
+    // Prism initialized
 });
 
 // Keyboard shortcuts
