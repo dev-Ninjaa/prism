@@ -36,6 +36,8 @@ jobs:
       # Install Rust stable toolchain
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # Cache Rust dependencies
       - name: Cache Rust dependencies
@@ -71,13 +73,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Install Rust targets for macOS universal build
-      - name: Install macOS targets
-        if: matrix.os == 'macos'
-        run: |
-          rustup target add x86_64-apple-darwin
-          rustup target add aarch64-apple-darwin
-
       # Build the application using tauri-action
       # This handles the build process and uploads artifacts to the GitHub Release
       - name: Build and upload release assets
@@ -85,11 +80,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          # This is triggered by a release event, so we specify the tag name
-          tagName: ${{ github.event.release.tag_name }}
-          releaseName: ${{ github.event.release.name }}
-          releaseBody: ${{ github.event.release.body }}
-          releaseDraft: false
-          prerelease: ${{ github.event.release.prerelease }}
+          # Upload to existing release by tag
+          releaseId: ${{ github.event.release.id }}
           # Automatically upload built artifacts to the release
           args: ${{ matrix.os == 'macos' && '--target universal-apple-darwin' || '' }}
+          # Include updater JSON for future auto-updates
+          includeUpdaterJson: false
