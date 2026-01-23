@@ -4,11 +4,11 @@ Thank you for your interest in Prism!
 
 ## Project Status
 
-Prism is currently a **personal portfolio project**. The core feature set is complete and stable.
+Prism is currently a **Hackathon Project**. The core feature set is complete and stable.
 
 ## Contributions
 
-At this time, **contributions are not being accepted** as this project serves as a demonstration of my technical skills and design decisions.
+At this time, **contributions are not being accepted** as this project serves as a demonstration of our technical skills and design decisions.
 
 ## Forking
 
