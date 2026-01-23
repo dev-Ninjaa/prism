@@ -194,15 +194,7 @@ async function handleSendRequest() {
     if (btnLoader) btnLoader.style.display = 'inline-block';
 
     try {
-        // Try multiple ways to get invoke for maximum compatibility
-        let invoke;
-        if (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke) {
-            invoke = window.__TAURI__.core.invoke;
-        } else if (window.__TAURI_INVOKE__) {
-            invoke = window.__TAURI_INVOKE__;
-        } else if (window.__TAURI__ && window.__TAURI__.invoke) {
-            invoke = window.__TAURI__.invoke;
-        }
+        const invoke = getInvoke();
 
         if (!invoke) {
             throw new Error('Tauri invoke not found. Are you running in a web browser?');
@@ -234,6 +226,8 @@ async function handleSendRequest() {
     }
 }
 
+const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+
 async function handleExportCurl() {
     if (!state.request.url.trim()) {
         alert('Please enter a URL');
@@ -241,7 +235,11 @@ async function handleExportCurl() {
     }
 
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
+        
         const curlCommand = await invoke('export_curl', { 
             req: structuredClone(state.request)
         });
@@ -272,7 +270,10 @@ async function handleSaveRequest() {
     }
 
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
         await invoke('save_request', { req: structuredClone(state.request) });
         
         // Show success feedback
@@ -295,7 +296,10 @@ async function handleSaveRequest() {
 
 async function handleLoadRequest() {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
         const loadedRequest = await invoke('load_request');
         if (!loadedRequest) return;
         

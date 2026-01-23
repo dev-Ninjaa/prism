@@ -180,18 +180,109 @@
     margin-top: var(--spacing-xs);
 }
 
-.collection-request {
+.collection-subfolder {
+    margin-bottom: var(--spacing-xs);
+}
+
+.collection-subfolder .collection-folder {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: transparent;
+    border-left: 2px solid var(--border-subtle);
+    margin-left: var(--spacing-sm);
+}
+
+.collection-subfolder .collection-folder:hover {
+    background: var(--bg-panel-alt);
+    border-left-color: var(--accent);
+}
+
+.collection-subfolder .collection-name {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.collection-subfolder .collection-actions {
+    gap: var(--spacing-xs);
+}
+
+.collection-subfolder .collection-subfolder-add-btn,
+.collection-subfolder .collection-subfolder-edit-btn,
+.collection-subfolder .collection-subfolder-delete-btn {
+    padding: 1px 4px;
+    font-size: 10px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-xs) var(--spacing-sm);
-    margin-bottom: var(--spacing-xs);
-    background: transparent;
+    justify-content: center;
+    transition: all 120ms ease;
+}
+
+.collection-subfolder .collection-subfolder-edit-btn:hover {
+    background: var(--bg-panel-alt);
+    color: var(--text-secondary);
+}
+
+.collection-subfolder .collection-subfolder-delete-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--error);
+}
+
+.subfolder-requests {
+    margin-left: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+}
+
+.collection-request .collection-request-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.collection-request:hover .collection-request-actions {
+    opacity: 1;
+}
+
+.collection-request .collection-request-edit-btn,
+.collection-request .collection-request-move-btn,
+.collection-request .collection-request-duplicate-btn,
+.collection-request .collection-request-delete-btn {
+    padding: 2px 4px;
+    font-size: 10px;
+    background: none;
     border: none;
-    border-radius: var(--radius-sm);
+    color: var(--text-muted);
     cursor: pointer;
-    transition: background 120ms ease;
-    font-size: 11px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 120ms ease;
+}
+
+.collection-request .collection-request-edit-btn:hover {
+    background: var(--bg-panel-alt);
+    color: var(--text-secondary);
+}
+
+.collection-request .collection-request-move-btn:hover {
+    background: var(--bg-panel-alt);
+    color: var(--text-secondary);
+}
+
+.collection-request .collection-request-duplicate-btn:hover {
+    background: var(--bg-panel-alt);
+    color: var(--text-secondary);
+}
+
+.collection-request .collection-request-delete-btn:hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: var(--error);
+}
     text-align: left;
     width: 100%;
 }

@@ -13,6 +13,7 @@ use env::{EnvStore, EnvVar, resolve_variables};
 use workspace::{save_request_to_file, load_request_from_file};
 use std::sync::Arc;
 use std::collections::HashMap;
+use chrono;
 use tauri::{State, Manager, AppHandle};
 
 struct AppState {
@@ -129,6 +130,38 @@ async fn load_request(app: AppHandle) -> Result<ApiRequest, String> {
     Err("No file selected".to_string())
 }
 
+#[tauri::command]
+async fn save_collections(app: AppHandle, collections: serde_json::Value) -> Result<(), String> {
+    use tauri_plugin_dialog::{DialogExt, FilePath};
+    use std::fs;
+    
+    // Open save dialog (blocking)
+    let file_path = app.dialog()
+        .file()
+        .set_title("Export Collections")
+        .add_filter("JSON Files", &["json"])
+        .set_file_name(&format!("prism-collections-{}.json", chrono::Utc::now().format("%Y-%m-%d")))
+        .blocking_save_file();
+    
+    if let Some(path) = file_path {
+        let path_str = match path {
+            FilePath::Path(p) => p.to_str()
+                .ok_or_else(|| "Invalid file path".to_string())?.to_string(),
+            FilePath::Url(_u) => return Err("URL paths not supported".to_string()),
+        };
+        
+        // Serialize to pretty JSON
+        let json = serde_json::to_string_pretty(&collections)
+            .map_err(|e| format!("Failed to serialize collections: {}", e))?;
+        
+        // Write to file
+        fs::write(&path_str, json)
+            .map_err(|e| format!("Failed to write file: {}", e))?;
+    }
+    
+    Ok(())
+}
+
 /// Resolves environment variables in an ApiRequest
 fn resolve_request_variables(mut req: ApiRequest, env_store: &EnvStore) -> Result<ApiRequest, String> {
     // Load all env vars into a HashMap
@@ -223,7 +256,8 @@ fn main() {
             set_env_var,
             delete_env_var,
             save_request,
-            load_request
+            load_request,
+            save_collections
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

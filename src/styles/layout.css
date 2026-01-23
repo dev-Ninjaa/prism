@@ -1,13 +1,17 @@
+:root {
+    --sidebar-width: 280px;
+}
+
 .app-container {
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: var(--sidebar-width) auto 1fr;
     height: 100vh;
     overflow: hidden;
     transition: grid-template-columns 0.3s ease;
 }
 
 .app-container.collapsed {
-    grid-template-columns: 0px 1fr;
+    grid-template-columns: 0px 0px 1fr;
 }
 
 /* Responsive design */
@@ -40,8 +44,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    width: 280px;
-    min-width: 280px;
+    width: 100%;
     transition: width 0.3s ease, min-width 0.3s ease;
 }
 
@@ -49,6 +52,26 @@
     width: 0px;
     min-width: 0px;
     border-right: none;
+}
+
+/* Horizontal Resizer */
+.resizer.horizontal {
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.2s;
+    z-index: 10;
+    margin-left: -2px;
+}
+
+.resizer.horizontal:hover,
+.resizer.horizontal.resizing {
+    background: var(--accent-primary);
+}
+
+.app-container.collapsed .resizer.horizontal {
+    display: none;
 }
 
 .sidebar-header {

@@ -22,6 +22,8 @@ const state = {
     collections: []
 };
 
+const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+
 // State management functions
 function updateRequest(updates) {
     state.request = { ...state.request, ...updates };
@@ -37,7 +39,8 @@ function setResponse(response) {
 
 async function clearHistory() {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) return;
         await invoke('clear_history');
         state.history = [];
     } catch (e) {
@@ -48,7 +51,8 @@ async function clearHistory() {
 
 async function loadHistory() {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) return;
         const history = await invoke('get_history');
         state.history = history;
     } catch (e) {
@@ -60,7 +64,8 @@ async function loadHistory() {
 // Environment variables management
 async function loadEnvVars() {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) return;
         const envVars = await invoke('get_env_vars');
         state.envVars = envVars;
     } catch (e) {
@@ -71,7 +76,8 @@ async function loadEnvVars() {
 
 async function setEnvVar(key, value) {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) return;
         await invoke('set_env_var', { key, value });
         await loadEnvVars();
     } catch (e) {
@@ -82,7 +88,8 @@ async function setEnvVar(key, value) {
 
 async function deleteEnvVar(key) {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) return;
         await invoke('delete_env_var', { key });
         await loadEnvVars();
     } catch (e) {
