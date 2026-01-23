@@ -1,5 +1,6 @@
 // Sidebar and history management
 let historyFilter = '';
+let collectionSearchFilter = '';
 
 function loadCollections() {
     const saved = localStorage.getItem('collections');
@@ -210,17 +211,22 @@ function renderCollections() {
         // Delete collection button handler
         const deleteBtn = folder.querySelector('.collection-delete-btn');
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
+            deleteBtn.addEventListener('click', async (e) => {
                 e.stopPropagation(); // Prevent folder toggle
                 const idx = parseInt(deleteBtn.dataset.index);
                 const collection = state.collections[idx];
                 
-                const confirmDelete = confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`);
-                if (!confirmDelete) return;
-
-                state.collections.splice(idx, 1);
-                saveCollections();
-                renderCollections();
+                const { dialog } = window.__TAURI__;
+                const confirmed = await dialog.confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`, {
+                    title: 'Delete Collection',
+                    type: 'warning'
+                });
+                
+                if (confirmed) {
+                    state.collections.splice(idx, 1);
+                    saveCollections();
+                    renderCollections();
+                }
             });
         }
 
@@ -326,7 +332,7 @@ function renderCollections() {
                     // Delete request button handler
                     const deleteBtn = reqEl.querySelector('.collection-request-delete-btn');
                     if (deleteBtn) {
-                        deleteBtn.addEventListener('click', (e) => {
+                        deleteBtn.addEventListener('click', async (e) => {
                             e.stopPropagation();
                             const collectionIdx = parseInt(deleteBtn.dataset.collection);
                             const requestIdx = parseInt(deleteBtn.dataset.request);
@@ -569,9 +575,13 @@ async function initSidebar() {
         // Export collections
         const exportCollectionsBtn = document.getElementById('exportCollectionsBtn');
         if (exportCollectionsBtn) {
-            exportCollectionsBtn.addEventListener('click', () => {
+            exportCollectionsBtn.addEventListener('click', async () => {
                 if (state.collections.length === 0) {
-                    alert('No collections to export');
+                    const { dialog } = window.__TAURI__;
+                    await dialog.message('No collections to export', {
+                        title: 'Export Collections',
+                        type: 'info'
+                    });
                     return;
                 }
 
@@ -608,12 +618,12 @@ async function initSidebar() {
                 if (dropdown) dropdown.classList.remove('show');
             });
 
-            importFileInput.addEventListener('change', (e) => {
+            importFileInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = async (event) => {
                     try {
                         const importData = JSON.parse(event.target.result);
                         
@@ -629,8 +639,14 @@ async function initSidebar() {
                         let mergedCollections = [...state.collections];
                         
                         if (conflicts.length > 0) {
-                            const renameAll = confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`);
-                            if (renameAll) {
+                            // Use Tauri dialog instead of browser confirm
+                            const { dialog } = window.__TAURI__;
+                            const confirmed = await dialog.confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`, {
+                                title: 'Import Collections',
+                                type: 'warning'
+                            });
+                            
+                            if (confirmed) {
                                 importData.collections.forEach(collection => {
                                     let newName = collection.name;
                                     let counter = 1;
@@ -645,7 +661,10 @@ async function initSidebar() {
                                 const nonConflicting = importData.collections.filter(c => !existingNames.includes(c.name));
                                 mergedCollections = [...state.collections, ...nonConflicting];
                                 if (nonConflicting.length < importData.collections.length) {
-                                    alert(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`);
+                                    await dialog.message(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`, {
+                                        title: 'Import Complete',
+                                        type: 'info'
+                                    });
                                 }
                             }
                         } else {
@@ -655,10 +674,18 @@ async function initSidebar() {
                         state.collections = mergedCollections;
                         saveCollections();
                         renderCollections();
-                        alert(`Successfully imported ${importData.collections.length} collection(s).`);
+                        
+                        await dialog.message(`Successfully imported ${importData.collections.length} collection(s).`, {
+                            title: 'Import Complete',
+                            type: 'info'
+                        });
                         
                     } catch (error) {
-                        alert(`Failed to import collections: ${error.message}`);
+                        const { dialog } = window.__TAURI__;
+                        await dialog.message(`Failed to import collections: ${error.message}`, {
+                            title: 'Import Error',
+                            type: 'error'
+                        });
                     }
                 };
                 reader.readAsText(file);
@@ -671,18 +698,27 @@ async function initSidebar() {
         // Clear all collections
         const clearAllCollectionsBtn = document.getElementById('clearAllCollectionsBtn');
         if (clearAllCollectionsBtn) {
-            clearAllCollectionsBtn.addEventListener('click', () => {
+            clearAllCollectionsBtn.addEventListener('click', async () => {
                 if (state.collections.length === 0) {
-                    alert('No collections to clear');
+                    const { dialog } = window.__TAURI__;
+                    await dialog.message('No collections to clear', {
+                        title: 'Clear Collections',
+                        type: 'info'
+                    });
                     return;
                 }
                 
-                const confirmClear = confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`);
-                if (!confirmClear) return;
-
-                state.collections = [];
-                saveCollections();
-                renderCollections();
+                const { dialog } = window.__TAURI__;
+                const confirmClear = await dialog.confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`, {
+                    title: 'Clear All Collections',
+                    type: 'warning'
+                });
+                
+                if (confirmClear) {
+                    state.collections = [];
+                    saveCollections();
+                    renderCollections();
+                }
                 
                 // Close dropdown
                 const dropdown = document.getElementById('collectionsDropdown');
