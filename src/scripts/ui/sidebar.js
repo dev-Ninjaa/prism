@@ -1197,6 +1197,64 @@ async function initSidebar() {
 
     // Initialize vertical resize functionality
     initVerticalResize();
+    initHorizontalResize();
+}
+
+// Horizontal resizer for the whole sidebar
+function initHorizontalResize() {
+    const resizer = document.getElementById('sidebarResizer');
+    const sidebar = document.getElementById('sidebar');
+    const appContainer = document.querySelector('.app-container');
+
+    if (!resizer || !sidebar || !appContainer) return;
+
+    let isResizing = false;
+
+    // Load saved width
+    const savedWidth = localStorage.getItem('sidebarWidth');
+    if (savedWidth) {
+        document.documentElement.style.setProperty('--sidebar-width', `${savedWidth}px`);
+    }
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        resizer.classList.add('resizing');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        
+        // Disable transitions during resizing for smooth movement
+        appContainer.style.transition = 'none';
+        sidebar.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+
+        let newWidth = e.clientX;
+        
+        // Min and Max constraints
+        if (newWidth < 150) newWidth = 150;
+        if (newWidth > 600) newWidth = 600;
+
+        document.documentElement.style.setProperty('--sidebar-width', `${newWidth}px`);
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isResizing) return;
+
+        isResizing = false;
+        resizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        
+        // Re-enable transitions
+        appContainer.style.transition = '';
+        sidebar.style.transition = '';
+
+        // Save width
+        const currentWidth = sidebar.offsetWidth;
+        localStorage.setItem('sidebarWidth', currentWidth);
+    });
 }
 
 // Vertical resize functionality for collections and history
