@@ -27,3 +27,21 @@ body {
 .no-transition * {
     transition: none !important;
 }
+
+/* Light theme enhancements */
+body.light-theme .sidebar {
+    box-shadow: var(--shadow-md);
+}
+
+body.light-theme .response-body {
+    border-top: 1px solid var(--border-subtle);
+}
+
+body.light-theme .tabs {
+    border-bottom: 1px solid var(--border-color);
+}
+
+body.light-theme .env-info {
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+}

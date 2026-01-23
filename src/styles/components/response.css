@@ -67,7 +67,7 @@
 .response-body {
     margin: 0;
     padding: var(--spacing-xl);
-    background: #0a0c10;
+    background: var(--bg-panel);
     border-radius: 0;
     overflow: auto;
     font-size: var(--font-size-sm);
