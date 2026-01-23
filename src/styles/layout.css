@@ -130,7 +130,8 @@
     background: var(--bg-root);
     border-bottom: 1px solid var(--border-subtle);
     min-height: 200px;
-    max-height: 300px;
+    /* allow editor to grow naturally, especially in split view */
+    max-height: none;
     display: flex;
     flex-direction: column;
 }
@@ -169,17 +170,22 @@
 
 .tab-content {
     flex: 1;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .tab-panel {
     display: none;
     padding: var(--spacing-lg);
-    height: 100%;
+    flex: 1 1 auto;
+    overflow: auto;
+    display: none;
 }
 
 .tab-panel.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Key-Value Editor */
@@ -293,8 +299,7 @@
 /* Body Editor */
 .body-editor {
     width: 100%;
-    height: 100%;
-    min-height: 150px;
+    min-height: 120px;
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
@@ -303,6 +308,9 @@
     font-size: var(--font-size-sm);
     resize: vertical;
     transition: background 120ms ease, border-color 120ms ease;
+    /* Allow textarea to grow to fill the tab panel */
+    flex: 1 1 auto;
+    box-sizing: border-box;
 }
 
 .body-editor:hover {

@@ -29,6 +29,7 @@ function renderCollections() {
             <div class="collection-folder" id="folder-${index}">
                 <button class="collection-folder-toggle">▶</button>
                 <span>${collection.name}</span>
+                <button class="collection-add-btn" data-index="${index}" title="Add request" aria-label="Add request">+</button>
             </div>
             <div class="collection-requests" id="requests-${index}" style="display: none;">
                 ${collection.requests.map((req, reqIndex) => `
@@ -53,6 +54,38 @@ function renderCollections() {
                 const isCollapsed = requests.style.display === 'none';
                 requests.style.display = isCollapsed ? 'block' : 'none';
                 toggle.textContent = isCollapsed ? '▼' : '▶';
+            });
+        }
+
+        // Add request button handler
+        const addBtn = folder.querySelector('.collection-add-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                const idx = parseInt(addBtn.dataset.index);
+                const name = prompt('New request name:');
+                if (!name) return;
+
+                // Save a snapshot of the current request into the collection
+                state.collections[idx].requests.push({ ...structuredClone(state.request), name });
+                saveCollections();
+                renderCollections();
+
+                // After re-render, expand and highlight new request
+                setTimeout(() => {
+                    const requestsEl = document.getElementById(`requests-${idx}`);
+                    const folderEl = document.getElementById(`folder-${idx}`);
+                    const toggleBtn = folderEl ? folderEl.querySelector('.collection-folder-toggle') : null;
+                    if (requestsEl) requestsEl.style.display = 'block';
+                    if (toggleBtn) toggleBtn.textContent = '▼';
+
+                    const reqEls = requestsEl ? requestsEl.querySelectorAll('.collection-request') : [];
+                    const newReqEl = reqEls[reqEls.length - 1];
+                    if (newReqEl) {
+                        newReqEl.style.backgroundColor = 'var(--bg-tertiary)';
+                        newReqEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        setTimeout(() => newReqEl.style.backgroundColor = '', 500);
+                    }
+                }, 50);
             });
         }
 
