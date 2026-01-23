@@ -69,3 +69,21 @@
 #envPanel .empty-state {
     padding: var(--spacing-xl) var(--spacing-lg);
 }
+
+/* Ensure raw/form body containers stretch to fill available space */
+#rawBody, #formDataBody {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    flex: 1 1 auto;
+    min-height: 0; /* allow flex children to shrink properly */
+}
+
+.form-data-container {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.file-upload {
+    margin-top: var(--spacing-sm);
+}

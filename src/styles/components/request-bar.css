@@ -66,4 +66,20 @@
 
 .spinner {
     animation: spin 0.8s linear infinite;
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    transform-origin: center;
+    animation: spin 1s linear infinite, dash 1s ease-in-out infinite;
+}
+
+@keyframes dash {
+    0% {
+        stroke-dashoffset: 30;
+    }
+    50% {
+        stroke-dashoffset: 15;
+    }
+    100% {
+        stroke-dashoffset: 30;
+    }
 }

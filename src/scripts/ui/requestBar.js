@@ -60,6 +60,7 @@ function initRequestBar() {
         if (exportCurlBtn) exportCurlBtn.addEventListener('click', handleExportCurl);
         if (saveRequestBtn) saveRequestBtn.addEventListener('click', handleSaveRequest);
         if (loadRequestBtn) loadRequestBtn.addEventListener('click', handleLoadRequest);
+        if (saveToCollectionBtn) saveToCollectionBtn.addEventListener('click', handleSaveToCollection);
 
         if (addParamBtn) {
             addParamBtn.addEventListener('click', () => {
@@ -73,6 +74,33 @@ function initRequestBar() {
                 state.request.headers.push({ key: '', value: '', enabled: true });
                 renderHeaders();
             });
+        }
+
+        // Body type switching
+        const bodyTypeRadios = document.querySelectorAll('input[name="bodyType"]');
+        bodyTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const rawBody = document.getElementById('rawBody');
+                const formDataBody = document.getElementById('formDataBody');
+                if (e.target.value === 'raw') {
+                    rawBody.style.display = 'block';
+                    formDataBody.style.display = 'none';
+                } else {
+                    rawBody.style.display = 'none';
+                    formDataBody.style.display = 'block';
+                    renderFormData();
+                }
+            });
+        });
+
+        // File upload
+        const uploadFileBtn = document.getElementById('uploadFileBtn');
+        const fileInput = document.getElementById('fileInput');
+        if (uploadFileBtn && fileInput) {
+            uploadFileBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', handleFileSelect);
         }
 
         // Allow Enter key to send request
@@ -166,15 +194,7 @@ async function handleSendRequest() {
     if (btnLoader) btnLoader.style.display = 'inline-block';
 
     try {
-        // Try multiple ways to get invoke for maximum compatibility
-        let invoke;
-        if (window.__TAURI__ && window.__TAURI__.core && window.__TAURI__.core.invoke) {
-            invoke = window.__TAURI__.core.invoke;
-        } else if (window.__TAURI_INVOKE__) {
-            invoke = window.__TAURI_INVOKE__;
-        } else if (window.__TAURI__ && window.__TAURI__.invoke) {
-            invoke = window.__TAURI__.invoke;
-        }
+        const invoke = getInvoke();
 
         if (!invoke) {
             throw new Error('Tauri invoke not found. Are you running in a web browser?');
@@ -206,6 +226,8 @@ async function handleSendRequest() {
     }
 }
 
+const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+
 async function handleExportCurl() {
     if (!state.request.url.trim()) {
         alert('Please enter a URL');
@@ -213,7 +235,11 @@ async function handleExportCurl() {
     }
 
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
+        
         const curlCommand = await invoke('export_curl', { 
             req: structuredClone(state.request)
         });
@@ -244,7 +270,10 @@ async function handleSaveRequest() {
     }
 
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
         await invoke('save_request', { req: structuredClone(state.request) });
         
         // Show success feedback
@@ -267,7 +296,10 @@ async function handleSaveRequest() {
 
 async function handleLoadRequest() {
     try {
-        const { invoke } = window.__TAURI__.core;
+        const invoke = getInvoke();
+        if (!invoke) {
+            throw new Error('Tauri invoke not found');
+        }
         const loadedRequest = await invoke('load_request');
         if (!loadedRequest) return;
         
@@ -398,11 +430,76 @@ function renderKVList(container, items, type) {
     });
 }
 
+function renderFormData() {
+    const container = document.getElementById('formDataList');
+    if (!container) return;
+    // Similar to renderKVList but for form data
+    // For now, basic implementation
+    if (!state.request.formData) state.request.formData = [];
+    renderKVList(container, state.request.formData, 'formData');
+}
+
+function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = files.map(file => `<div>${file.name} (${file.size} bytes)</div>`).join('');
+    // Store files in state
+    state.request.files = files;
+}
+
 function renderAuth() {
     const authTypeSelect = document.getElementById('authTypeSelect');
     if (authTypeSelect) {
         authTypeSelect.value = state.request.auth.type;
         // Trigger change event to update auth fields
         authTypeSelect.dispatchEvent(new Event('change'));
+    }
+}
+
+async function handleSaveToCollection() {
+    if (!state.request.url.trim()) {
+        alert('Please enter a URL before saving to collection');
+        return;
+    }
+
+    if (state.collections.length === 0) {
+        alert('No collections available. Create a collection first.');
+        return;
+    }
+
+    const collectionNames = state.collections.map(c => c.name);
+    const selected = prompt(`Select collection:\n${collectionNames.join('\n')}`);
+    const index = collectionNames.indexOf(selected);
+
+    if (index === -1) {
+        alert('Collection not found');
+        return;
+    }
+
+    if (index >= 0) {
+        const name = prompt('Request name:');
+        if (name) {
+            state.collections[index].requests.push({ ...structuredClone(state.request), name });
+            saveCollections();
+            renderCollections();
+
+            // Auto-expand and highlight the saved request
+            const requestsEl = document.getElementById(`requests-${index}`);
+            const folderEl = document.getElementById(`folder-${index}`);
+            const toggleBtn = folderEl ? folderEl.querySelector('.collection-folder-toggle') : null;
+            if (requestsEl) requestsEl.style.display = 'block';
+            if (toggleBtn) toggleBtn.textContent = '▼';
+
+            // Highlight new request
+            setTimeout(() => {
+                const reqEls = requestsEl ? requestsEl.querySelectorAll('.collection-request') : [];
+                const newReqEl = reqEls[reqEls.length - 1];
+                if (newReqEl) {
+                    newReqEl.style.backgroundColor = 'var(--bg-tertiary)';
+                    newReqEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    setTimeout(() => newReqEl.style.backgroundColor = '', 500);
+                }
+            }, 50);
+        }
     }
 }
