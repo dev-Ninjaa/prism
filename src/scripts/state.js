@@ -18,7 +18,8 @@ const state = {
     },
     response: null,
     history: [],
-    envVars: []
+    envVars: [],
+    collections: []
 };
 
 // State management functions

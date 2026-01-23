@@ -1,4 +1,6 @@
 // Response viewer
+let isPrettyPrint = true;
+
 function renderResponse(response) {
     const statusBadge = document.getElementById('statusBadge');
     const responseTime = document.getElementById('responseTime');
@@ -15,13 +17,26 @@ function renderResponse(response) {
     responseTime.textContent = `${response.time}ms`;
     responseSize.textContent = `${response.size} KB`;
 
+    // Detect content type
+    const contentType = getContentType(response.headers);
+    const isJson = contentType && contentType.includes('application/json');
+    const isXml = contentType && (contentType.includes('application/xml') || contentType.includes('text/xml'));
+    const isHtml = contentType && contentType.includes('text/html');
+
     // Body
     if (response.body) {
-        if (typeof response.body === 'string') {
-            responseBody.textContent = response.body;
+        if (isPrettyPrint) {
+            if (isJson && typeof response.body === 'object') {
+                responseBody.innerHTML = formatJSON(response.body);
+            } else if (isXml) {
+                responseBody.textContent = formatXML(response.body);
+            } else if (isHtml) {
+                responseBody.innerHTML = response.body;
+            } else {
+                responseBody.textContent = response.body;
+            }
         } else {
-            const formatted = formatJSON(response.body);
-            responseBody.innerHTML = formatted;
+            responseBody.textContent = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
         }
     } else {
         responseBody.textContent = '(No content)';
@@ -31,6 +46,37 @@ function renderResponse(response) {
     if (response.headers) {
         const formatted = formatJSON(response.headers);
         responseHeaders.innerHTML = formatted;
+    }
+}
+
+function getContentType(headers) {
+    if (!headers) return null;
+    const contentType = Object.keys(headers).find(key => key.toLowerCase() === 'content-type');
+    return contentType ? headers[contentType] : null;
+}
+
+function formatXML(xml) {
+    // Basic XML formatting
+    return xml.replace(/></g, '>\n<').replace(/(<[^>]+>)/g, '\n$1').trim();
+}
+
+// Initialize response controls
+function initResponseControls() {
+    const prettyPrintBtn = document.getElementById('prettyPrintBtn');
+    const rawViewBtn = document.getElementById('rawViewBtn');
+
+    if (prettyPrintBtn) {
+        prettyPrintBtn.addEventListener('click', () => {
+            isPrettyPrint = true;
+            if (state.response) renderResponse(state.response);
+        });
+    }
+
+    if (rawViewBtn) {
+        rawViewBtn.addEventListener('click', () => {
+            isPrettyPrint = false;
+            if (state.response) renderResponse(state.response);
+        });
     }
 }
 

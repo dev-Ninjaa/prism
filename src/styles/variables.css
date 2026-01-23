@@ -62,3 +62,32 @@
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-panel: 0 0 0 1px rgba(255, 255, 255, 0.04);
 }
+
+/* Light theme */
+body.light-theme {
+    --bg-root: #ffffff;
+    --bg-panel: #f8f9fa;
+    --bg-panel-alt: #e9ecef;
+    --bg-hover: #dee2e6;
+    
+    --border-color: rgba(0, 0, 0, 0.1);
+    --border-subtle: rgba(0, 0, 0, 0.05);
+    
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --text-muted: #adb5bd;
+    
+    --accent: #007bff;
+    --accent-hover: #0056b3;
+    --accent-muted: rgba(0, 123, 255, 0.15);
+    
+    --success: #28a745;
+    --warning: #ffc107;
+    --error: #dc3545;
+    --info: #17a2b8;
+    
+    --status-success: #28a745;
+    --status-redirect: #17a2b8;
+    --status-client-error: #ffc107;
+    --status-server-error: #dc3545;
+}

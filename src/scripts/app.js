@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initRequestBar();
         initTabs();
         initAuthForm();
+        initResponseControls();
     } catch (e) {
         console.error('Module initialization failed:', e);
     }
@@ -18,6 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadEnvVars().then(() => {
         renderEnvVars();
     });
+
+    // Load and render collections
+    loadCollections();
+    renderCollections();
 
     // Prism initialized
 });
