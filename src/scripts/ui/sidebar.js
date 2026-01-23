@@ -24,23 +24,105 @@ function renderCollections() {
         return;
     }
 
-    container.innerHTML = state.collections.map((collection, index) => `
+    // Filter collections based on search
+    let filteredCollections = state.collections;
+    if (collectionSearchFilter) {
+        const filter = collectionSearchFilter.toLowerCase();
+        filteredCollections = state.collections.filter(collection => 
+            collection.name.toLowerCase().includes(filter) ||
+            collection.requests.some(req => 
+                (req.name || req.url).toLowerCase().includes(filter) ||
+                req.method.toLowerCase().includes(filter)
+            )
+        );
+    }
+
+    if (filteredCollections.length === 0) {
+        container.innerHTML = `<div class="empty-state">No collections match "${collectionSearchFilter}"</div>`;
+        return;
+    }
+
+    container.innerHTML = filteredCollections.map((collection) => {
+        // Find the original index in the full collections array
+        const index = state.collections.findIndex(c => c === collection);
+        return `
         <div class="collection-item" data-index="${index}">
             <div class="collection-folder" id="folder-${index}">
                 <button class="collection-folder-toggle">▶</button>
-                <span>${collection.name}</span>
-                <button class="collection-add-btn" data-index="${index}" title="Add request" aria-label="Add request">+</button>
+                <span class="collection-name">${collection.name}</span>
+                <div class="collection-meta">
+                    <span class="collection-count">${collection.requests.length} requests</span>
+                </div>
+                <div class="collection-actions">
+                    <button class="collection-edit-btn" data-index="${index}" title="Edit collection" aria-label="Edit collection">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="collection-duplicate-btn" data-index="${index}" title="Duplicate collection" aria-label="Duplicate collection">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M4 6V2C4 1.44772 4.44772 1 5 1H13C13.5523 1 14 1.44772 14 2V10C14 10.5523 13.5523 11 13 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="2" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </button>
+                    <button class="collection-delete-btn" data-index="${index}" title="Delete collection" aria-label="Delete collection">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <button class="collection-add-btn" data-index="${index}" title="Add request" aria-label="Add request">+</button>
+                </div>
             </div>
             <div class="collection-requests" id="requests-${index}" style="display: none;">
                 ${collection.requests.map((req, reqIndex) => `
                     <div class="collection-request" data-collection="${index}" data-request="${reqIndex}">
-                        <span class="history-method ${req.method}">${req.method}</span>
-                        ${req.name || req.url}
+                        <div class="collection-request-content">
+                            <span class="history-method ${req.method}">${req.method}</span>
+                            <span class="collection-request-name">${req.name || req.url}</span>
+                        </div>
+                        <div class="collection-request-actions">
+                            <button class="collection-request-edit-btn" data-collection="${index}" data-request="${reqIndex}" title="Edit request name" aria-label="Edit request name">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button class="collection-request-move-btn" data-collection="${index}" data-request="${reqIndex}" title="Move to another collection" aria-label="Move to another collection">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M8 2L14 8L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 8H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 12H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button class="collection-request-duplicate-btn" data-collection="${index}" data-request="${reqIndex}" title="Duplicate request" aria-label="Duplicate request">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M4 6V2C4 1.44772 4.44772 1 5 1H13C13.5523 1 14 1.44772 14 2V10C14 10.5523 13.5523 11 13 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <rect x="2" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </button>
+                            <button class="collection-request-delete-btn" data-collection="${index}" data-request="${reqIndex}" title="Delete request" aria-label="Delete request">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                 `).join('')}
             </div>
         </div>
-    `).join('');
+    `;}).join('');
 
     // Add event listeners
     state.collections.forEach((collection, index) => {
@@ -89,13 +171,175 @@ function renderCollections() {
             });
         }
 
+        // Edit collection button handler
+        const editBtn = folder.querySelector('.collection-edit-btn');
+        if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent folder toggle
+                const idx = parseInt(editBtn.dataset.index);
+                const collection = state.collections[idx];
+                const newName = prompt('Edit collection name:', collection.name);
+                if (!newName || newName.trim() === collection.name) return;
+
+                state.collections[idx].name = newName.trim();
+                saveCollections();
+                renderCollections();
+            });
+        }
+
+        // Duplicate collection button handler
+        const duplicateBtn = folder.querySelector('.collection-duplicate-btn');
+        if (duplicateBtn) {
+            duplicateBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent folder toggle
+                const idx = parseInt(duplicateBtn.dataset.index);
+                const collection = state.collections[idx];
+                const newName = prompt('New collection name:', `${collection.name} Copy`);
+                if (!newName) return;
+
+                const duplicatedCollection = {
+                    name: newName.trim(),
+                    requests: collection.requests.map(req => ({ ...structuredClone(req) }))
+                };
+                state.collections.push(duplicatedCollection);
+                saveCollections();
+                renderCollections();
+            });
+        }
+
+        // Delete collection button handler
+        const deleteBtn = folder.querySelector('.collection-delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent folder toggle
+                const idx = parseInt(deleteBtn.dataset.index);
+                const collection = state.collections[idx];
+                
+                const confirmDelete = confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`);
+                if (!confirmDelete) return;
+
+                state.collections.splice(idx, 1);
+                saveCollections();
+                renderCollections();
+            });
+        }
+
         if (requests) {
             collection.requests.forEach((req, reqIndex) => {
                 const reqEl = requests.querySelector(`[data-request="${reqIndex}"]`);
                 if (reqEl) {
-                    reqEl.addEventListener('click', () => {
-                        loadCollectionRequest(collection.requests[reqIndex]);
-                    });
+                    // Click handler for the request content (not the buttons)
+                    const reqContent = reqEl.querySelector('.collection-request-content');
+                    if (reqContent) {
+                        reqContent.addEventListener('click', () => {
+                            loadCollectionRequest(collection.requests[reqIndex]);
+                        });
+                    }
+
+                    // Edit request button handler
+                    const editBtn = reqEl.querySelector('.collection-request-edit-btn');
+                    if (editBtn) {
+                        editBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const collectionIdx = parseInt(editBtn.dataset.collection);
+                            const requestIdx = parseInt(editBtn.dataset.request);
+                            const request = state.collections[collectionIdx].requests[requestIdx];
+                            const newName = prompt('Edit request name:', request.name || request.url);
+                            if (!newName || newName.trim() === (request.name || request.url)) return;
+
+                            state.collections[collectionIdx].requests[requestIdx].name = newName.trim();
+                            saveCollections();
+                            renderCollections();
+                        });
+                    }
+
+                    // Move request button handler
+                    const moveBtn = reqEl.querySelector('.collection-request-move-btn');
+                    if (moveBtn) {
+                        moveBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const collectionIdx = parseInt(moveBtn.dataset.collection);
+                            const requestIdx = parseInt(moveBtn.dataset.request);
+                            const request = state.collections[collectionIdx].requests[requestIdx];
+                            
+                            // Create collection selection dialog
+                            const collectionOptions = state.collections.map((col, idx) => 
+                                `<option value="${idx}" ${idx === collectionIdx ? 'disabled' : ''}>${col.name}</option>`
+                            ).join('');
+                            
+                            const dialog = document.createElement('div');
+                            dialog.className = 'move-dialog-overlay';
+                            dialog.innerHTML = `
+                                <div class="move-dialog">
+                                    <h3>Move Request</h3>
+                                    <p>Move "${request.name || request.url}" to:</p>
+                                    <select id="moveTargetCollection">
+                                        ${collectionOptions}
+                                    </select>
+                                    <div class="move-dialog-actions">
+                                        <button id="moveCancelBtn">Cancel</button>
+                                        <button id="moveConfirmBtn">Move</button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            document.body.appendChild(dialog);
+                            
+                            // Handle dialog buttons
+                            document.getElementById('moveCancelBtn').addEventListener('click', () => {
+                                document.body.removeChild(dialog);
+                            });
+                            
+                            document.getElementById('moveConfirmBtn').addEventListener('click', () => {
+                                const targetCollectionIdx = parseInt(document.getElementById('moveTargetCollection').value);
+                                if (targetCollectionIdx === collectionIdx) return;
+                                
+                                // Move the request
+                                const movedRequest = state.collections[collectionIdx].requests.splice(requestIdx, 1)[0];
+                                state.collections[targetCollectionIdx].requests.push(movedRequest);
+                                
+                                saveCollections();
+                                renderCollections();
+                                document.body.removeChild(dialog);
+                            });
+                        });
+                    }
+
+                    // Duplicate request button handler
+                    const duplicateBtn = reqEl.querySelector('.collection-request-duplicate-btn');
+                    if (duplicateBtn) {
+                        duplicateBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const collectionIdx = parseInt(duplicateBtn.dataset.collection);
+                            const requestIdx = parseInt(duplicateBtn.dataset.request);
+                            const request = state.collections[collectionIdx].requests[requestIdx];
+                            const newName = prompt('New request name:', `${request.name || 'Request'} Copy`);
+                            if (!newName) return;
+
+                            const duplicatedRequest = { ...structuredClone(request), name: newName.trim() };
+                            state.collections[collectionIdx].requests.splice(requestIdx + 1, 0, duplicatedRequest);
+                            saveCollections();
+                            renderCollections();
+                        });
+                    }
+
+                    // Delete request button handler
+                    const deleteBtn = reqEl.querySelector('.collection-request-delete-btn');
+                    if (deleteBtn) {
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const collectionIdx = parseInt(deleteBtn.dataset.collection);
+                            const requestIdx = parseInt(deleteBtn.dataset.request);
+                            const request = state.collections[collectionIdx].requests[requestIdx];
+                            
+                            const confirmDelete = confirm(`Delete request "${request.name || request.url}"?`);
+                            if (!confirmDelete) return;
+
+                            state.collections[collectionIdx].requests.splice(requestIdx, 1);
+                            saveCollections();
+                            renderCollections();
+                        });
+                    }
                 }
             });
         }
@@ -322,6 +566,156 @@ async function initSidebar() {
             });
         }
 
+        // Export collections
+        const exportCollectionsBtn = document.getElementById('exportCollectionsBtn');
+        if (exportCollectionsBtn) {
+            exportCollectionsBtn.addEventListener('click', () => {
+                if (state.collections.length === 0) {
+                    alert('No collections to export');
+                    return;
+                }
+
+                const exportData = {
+                    version: '1.0',
+                    exportedAt: new Date().toISOString(),
+                    collections: state.collections
+                };
+
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prism-collections-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // Close dropdown
+                const dropdown = document.getElementById('collectionsDropdown');
+                if (dropdown) dropdown.classList.remove('show');
+            });
+        }
+
+        // Import collections
+        const importCollectionsBtn = document.getElementById('importCollectionsBtn');
+        const importFileInput = document.getElementById('importFileInput');
+        if (importCollectionsBtn && importFileInput) {
+            importCollectionsBtn.addEventListener('click', () => {
+                importFileInput.click();
+                // Close dropdown
+                const dropdown = document.getElementById('collectionsDropdown');
+                if (dropdown) dropdown.classList.remove('show');
+            });
+
+            importFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importData = JSON.parse(event.target.result);
+                        
+                        // Validate import data
+                        if (!importData.collections || !Array.isArray(importData.collections)) {
+                            throw new Error('Invalid file format');
+                        }
+
+                        // Check for conflicts
+                        const existingNames = state.collections.map(c => c.name);
+                        const conflicts = importData.collections.filter(c => existingNames.includes(c.name));
+                        
+                        let mergedCollections = [...state.collections];
+                        
+                        if (conflicts.length > 0) {
+                            const renameAll = confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`);
+                            if (renameAll) {
+                                importData.collections.forEach(collection => {
+                                    let newName = collection.name;
+                                    let counter = 1;
+                                    while (mergedCollections.some(c => c.name === newName)) {
+                                        newName = `${collection.name} (${counter})`;
+                                        counter++;
+                                    }
+                                    mergedCollections.push({ ...collection, name: newName });
+                                });
+                            } else {
+                                // Skip conflicting collections
+                                const nonConflicting = importData.collections.filter(c => !existingNames.includes(c.name));
+                                mergedCollections = [...state.collections, ...nonConflicting];
+                                if (nonConflicting.length < importData.collections.length) {
+                                    alert(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`);
+                                }
+                            }
+                        } else {
+                            mergedCollections = [...state.collections, ...importData.collections];
+                        }
+
+                        state.collections = mergedCollections;
+                        saveCollections();
+                        renderCollections();
+                        alert(`Successfully imported ${importData.collections.length} collection(s).`);
+                        
+                    } catch (error) {
+                        alert(`Failed to import collections: ${error.message}`);
+                    }
+                };
+                reader.readAsText(file);
+                
+                // Reset input
+                e.target.value = '';
+            });
+        }
+
+        // Clear all collections
+        const clearAllCollectionsBtn = document.getElementById('clearAllCollectionsBtn');
+        if (clearAllCollectionsBtn) {
+            clearAllCollectionsBtn.addEventListener('click', () => {
+                if (state.collections.length === 0) {
+                    alert('No collections to clear');
+                    return;
+                }
+                
+                const confirmClear = confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`);
+                if (!confirmClear) return;
+
+                state.collections = [];
+                saveCollections();
+                renderCollections();
+                
+                // Close dropdown
+                const dropdown = document.getElementById('collectionsDropdown');
+                if (dropdown) dropdown.classList.remove('show');
+            });
+        }
+
+        // Collections menu dropdown
+        const collectionsMenuBtn = document.getElementById('collectionsMenuBtn');
+        const collectionsDropdown = document.getElementById('collectionsDropdown');
+        if (collectionsMenuBtn && collectionsDropdown) {
+            collectionsMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                collectionsDropdown.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!collectionsMenuBtn.contains(e.target) && !collectionsDropdown.contains(e.target)) {
+                    collectionsDropdown.classList.remove('show');
+                }
+            });
+        }
+
+        // Collection search
+        const collectionSearchInput = document.getElementById('collectionSearch');
+        if (collectionSearchInput) {
+            collectionSearchInput.addEventListener('input', (e) => {
+                collectionSearchFilter = e.target.value.trim();
+                renderCollections();
+            });
+        }
+
         // History settings
         const historySettingsBtn = document.getElementById('historySettingsBtn');
         if (historySettingsBtn) {
@@ -329,6 +723,24 @@ async function initSidebar() {
                 const compact = confirm('Toggle compact history view? (OK for compact, Cancel for detailed)');
                 localStorage.setItem('historyCompact', compact);
                 renderHistory();
+            });
+        }
+
+        // Help button - show keyboard shortcuts
+        const helpBtn = document.getElementById('helpBtn');
+        if (helpBtn) {
+            helpBtn.addEventListener('click', () => {
+                const shortcuts = [
+                    'Ctrl/Cmd + Enter: Send request',
+                    'Ctrl/Cmd + S: Save request',
+                    'Ctrl/Cmd + O: Load request',
+                    'Ctrl/Cmd + Shift + N: New collection',
+                    'Ctrl/Cmd + Shift + S: Save to collection',
+                    'Ctrl/Cmd + Shift + E: Export collections',
+                    'Ctrl/Cmd + Shift + M: Move current request to collection'
+                ].join('\n');
+                
+                alert('Keyboard Shortcuts:\n\n' + shortcuts);
             });
         }
     }
