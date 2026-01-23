@@ -29,13 +29,27 @@ function renderCollections() {
     let filteredCollections = state.collections;
     if (collectionSearchFilter) {
         const filter = collectionSearchFilter.toLowerCase();
-        filteredCollections = state.collections.filter(collection => 
-            collection.name.toLowerCase().includes(filter) ||
-            collection.requests.some(req => 
+        filteredCollections = state.collections.filter(collection => {
+            // Check collection name
+            if (collection.name.toLowerCase().includes(filter)) return true;
+
+            // Check direct requests
+            if (collection.requests && collection.requests.some(req =>
                 (req.name || req.url).toLowerCase().includes(filter) ||
                 req.method.toLowerCase().includes(filter)
-            )
-        );
+            )) return true;
+
+            // Check folders and their requests
+            if (collection.folders && collection.folders.some(folder =>
+                folder.name.toLowerCase().includes(filter) ||
+                folder.requests.some(req =>
+                    (req.name || req.url).toLowerCase().includes(filter) ||
+                    req.method.toLowerCase().includes(filter)
+                )
+            )) return true;
+
+            return false;
+        });
     }
 
     if (filteredCollections.length === 0) {
@@ -46,14 +60,131 @@ function renderCollections() {
     container.innerHTML = filteredCollections.map((collection) => {
         // Find the original index in the full collections array
         const index = state.collections.findIndex(c => c === collection);
+
+        // Render sub-folders if they exist
+        let subFoldersHtml = '';
+        if (collection.folders && collection.folders.length > 0) {
+            subFoldersHtml = collection.folders.map((folder, folderIndex) => `
+                <div class="collection-subfolder" data-collection="${index}" data-folder="${folderIndex}">
+                    <div class="collection-folder subfolder" id="subfolder-${index}-${folderIndex}">
+                        <button class="collection-folder-toggle">▶</button>
+                        <span class="collection-name">${folder.name}</span>
+                        <div class="collection-actions">
+                            <button class="collection-subfolder-edit-btn" data-collection="${index}" data-folder="${folderIndex}" title="Edit folder" aria-label="Edit folder">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button class="collection-subfolder-delete-btn" data-collection="${index}" data-folder="${folderIndex}" title="Delete folder" aria-label="Delete folder">
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </button>
+                            <button class="collection-subfolder-add-btn" data-collection="${index}" data-folder="${folderIndex}" title="Add request" aria-label="Add request">+</button>
+                        </div>
+                    </div>
+                    <div class="collection-requests subfolder-requests" id="subrequests-${index}-${folderIndex}" style="display: none;">
+                        ${folder.requests.map((req, reqIndex) => `
+                            <div class="collection-request" data-collection="${index}" data-folder="${folderIndex}" data-request="${reqIndex}">
+                                <div class="collection-request-content">
+                                    <span class="history-method ${req.method}">${req.method}</span>
+                                    <span class="collection-request-name">${req.name || req.url}</span>
+                                </div>
+                                <div class="collection-request-actions">
+                                    <button class="collection-request-edit-btn" data-collection="${index}" data-folder="${folderIndex}" data-request="${reqIndex}" title="Edit request name" aria-label="Edit request name">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                            <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <button class="collection-request-move-btn" data-collection="${index}" data-folder="${folderIndex}" data-request="${reqIndex}" title="Move to another collection" aria-label="Move to another collection">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                            <path d="M8 2L14 8L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 8H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 12H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                    <button class="collection-request-duplicate-btn" data-collection="${index}" data-folder="${folderIndex}" data-request="${reqIndex}" title="Duplicate request" aria-label="Duplicate request">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                            <path d="M4 6V2C4 1.44772 4.44772 1 5 1H13C13.5523 1 14 1.44772 14 2V10C14 10.5523 13.5523 11 13 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <rect x="2" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        </svg>
+                                    </button>
+                                    <button class="collection-request-delete-btn" data-collection="${index}" data-folder="${folderIndex}" data-request="${reqIndex}" title="Delete request" aria-label="Delete request">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                            <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render direct requests if they exist (for backward compatibility)
+        let directRequestsHtml = '';
+        if (collection.requests && collection.requests.length > 0) {
+            directRequestsHtml = collection.requests.map((req, reqIndex) => `
+                <div class="collection-request" data-collection="${index}" data-request="${reqIndex}">
+                    <div class="collection-request-content">
+                        <span class="history-method ${req.method}">${req.method}</span>
+                        <span class="collection-request-name">${req.name || req.url}</span>
+                    </div>
+                    <div class="collection-request-actions">
+                        <button class="collection-request-edit-btn" data-collection="${index}" data-request="${reqIndex}" title="Edit request name" aria-label="Edit request name">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="collection-request-move-btn" data-collection="${index}" data-request="${reqIndex}" title="Move to another collection" aria-label="Move to another collection">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M8 2L14 8L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 8H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 12H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                        <button class="collection-request-duplicate-btn" data-collection="${index}" data-request="${reqIndex}" title="Duplicate request" aria-label="Duplicate request">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M4 6V2C4 1.44772 4.44772 1 5 1H13C13.5523 1 14 1.44772 14 2V10C14 10.5523 13.5523 11 13 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="2" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                        <button class="collection-request-delete-btn" data-collection="${index}" data-request="${reqIndex}" title="Delete request" aria-label="Delete request">
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         return `
         <div class="collection-item" data-index="${index}">
             <div class="collection-folder" id="folder-${index}">
                 <button class="collection-folder-toggle">▶</button>
                 <span class="collection-name">${collection.name}</span>
-                <div class="collection-meta">
-                    <span class="collection-count">${collection.requests.length} requests</span>
-                </div>
                 <div class="collection-actions">
                     <button class="collection-edit-btn" data-index="${index}" title="Edit collection" aria-label="Edit collection">
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -81,49 +212,12 @@ function renderCollections() {
                 </div>
             </div>
             <div class="collection-requests" id="requests-${index}" style="display: none;">
-                ${collection.requests.map((req, reqIndex) => `
-                    <div class="collection-request" data-collection="${index}" data-request="${reqIndex}">
-                        <div class="collection-request-content">
-                            <span class="history-method ${req.method}">${req.method}</span>
-                            <span class="collection-request-name">${req.name || req.url}</span>
-                        </div>
-                        <div class="collection-request-actions">
-                            <button class="collection-request-edit-btn" data-collection="${index}" data-request="${reqIndex}" title="Edit request name" aria-label="Edit request name">
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M11.5 2.5L13.5 4.5L6.5 11.5L4.5 13.5L2.5 11.5L9.5 4.5L11.5 2.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M9.5 4.5L11.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <button class="collection-request-move-btn" data-collection="${index}" data-request="${reqIndex}" title="Move to another collection" aria-label="Move to another collection">
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M8 2L14 8L8 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 8H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 12H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                            <button class="collection-request-duplicate-btn" data-collection="${index}" data-request="${reqIndex}" title="Duplicate request" aria-label="Duplicate request">
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M4 6V2C4 1.44772 4.44772 1 5 1H13C13.5523 1 14 1.44772 14 2V10C14 10.5523 13.5523 11 13 11H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <rect x="2" y="6" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                </svg>
-                            </button>
-                            <button class="collection-request-delete-btn" data-collection="${index}" data-request="${reqIndex}" title="Delete request" aria-label="Delete request">
-                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                `).join('')}
+                ${subFoldersHtml}
+                ${directRequestsHtml}
             </div>
         </div>
-    `;}).join('');
+        `;
+    }).join('');
 
     // Add event listeners
     state.collections.forEach((collection, index) => {
@@ -133,10 +227,20 @@ function renderCollections() {
 
         const toggle = folder.querySelector('.collection-folder-toggle');
         if (toggle && requests) {
-            toggle.addEventListener('click', () => {
+            const toggleFolder = () => {
                 const isCollapsed = requests.style.display === 'none';
                 requests.style.display = isCollapsed ? 'block' : 'none';
                 toggle.textContent = isCollapsed ? '▼' : '▶';
+            };
+
+            // Toggle on arrow button click
+            toggle.addEventListener('click', toggleFolder);
+
+            // Toggle on folder click (excluding action buttons)
+            folder.addEventListener('click', (e) => {
+                // Don't toggle if clicking on action buttons
+                if (e.target.closest('.collection-actions')) return;
+                toggleFolder();
             });
         }
 
@@ -200,7 +304,11 @@ function renderCollections() {
 
                 const duplicatedCollection = {
                     name: newName.trim(),
-                    requests: collection.requests.map(req => ({ ...structuredClone(req) }))
+                    requests: collection.requests ? collection.requests.map(req => ({ ...structuredClone(req) })) : [],
+                    folders: collection.folders ? collection.folders.map(folder => ({
+                        name: folder.name,
+                        requests: folder.requests.map(req => ({ ...structuredClone(req) }))
+                    })) : []
                 };
                 state.collections.push(duplicatedCollection);
                 saveCollections();
@@ -226,6 +334,230 @@ function renderCollections() {
                     state.collections.splice(idx, 1);
                     saveCollections();
                     renderCollections();
+                }
+            });
+        }
+
+        // Handle subfolders if they exist
+        if (collection.folders) {
+            collection.folders.forEach((folderData, folderIndex) => {
+                const subfolder = document.getElementById(`subfolder-${index}-${folderIndex}`);
+                const subrequests = document.getElementById(`subrequests-${index}-${folderIndex}`);
+                if (!subfolder) return;
+
+                const subtoggle = subfolder.querySelector('.collection-folder-toggle');
+                if (subtoggle && subrequests) {
+                    const toggleSubfolder = () => {
+                        const isCollapsed = subrequests.style.display === 'none';
+                        subrequests.style.display = isCollapsed ? 'block' : 'none';
+                        subtoggle.textContent = isCollapsed ? '▼' : '▶';
+                    };
+
+                    // Toggle on arrow button click
+                    subtoggle.addEventListener('click', toggleSubfolder);
+
+                    // Toggle on folder click (excluding action buttons)
+                    subfolder.addEventListener('click', (e) => {
+                        // Don't toggle if clicking on action buttons
+                        if (e.target.closest('.collection-actions')) return;
+                        toggleSubfolder();
+                    });
+                }
+
+                // Subfolder edit button handler
+                const subfolderEditBtn = subfolder.querySelector('.collection-subfolder-edit-btn');
+                if (subfolderEditBtn) {
+                    subfolderEditBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const collectionIdx = parseInt(subfolderEditBtn.dataset.collection);
+                        const folderIdx = parseInt(subfolderEditBtn.dataset.folder);
+                        const folder = state.collections[collectionIdx].folders[folderIdx];
+                        const newName = prompt('Edit folder name:', folder.name);
+                        if (!newName || newName.trim() === folder.name) return;
+
+                        state.collections[collectionIdx].folders[folderIdx].name = newName.trim();
+                        saveCollections();
+                        renderCollections();
+                    });
+                }
+
+                // Subfolder delete button handler
+                const subfolderDeleteBtn = subfolder.querySelector('.collection-subfolder-delete-btn');
+                if (subfolderDeleteBtn) {
+                    subfolderDeleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const collectionIdx = parseInt(subfolderDeleteBtn.dataset.collection);
+                        const folderIdx = parseInt(subfolderDeleteBtn.dataset.folder);
+                        const folder = state.collections[collectionIdx].folders[folderIdx];
+
+                        const { dialog } = window.__TAURI__;
+                        const confirmed = await dialog.confirm(`Delete folder "${folder.name}" and all its ${folder.requests.length} requests?`, {
+                            title: 'Delete Folder',
+                            type: 'warning'
+                        });
+
+                        if (confirmed) {
+                            state.collections[collectionIdx].folders.splice(folderIdx, 1);
+                            saveCollections();
+                            renderCollections();
+                        }
+                    });
+                }
+
+                // Subfolder add request button handler
+                const subfolderAddBtn = subfolder.querySelector('.collection-subfolder-add-btn');
+                if (subfolderAddBtn) {
+                    subfolderAddBtn.addEventListener('click', () => {
+                        const collectionIdx = parseInt(subfolderAddBtn.dataset.collection);
+                        const folderIdx = parseInt(subfolderAddBtn.dataset.folder);
+                        const name = prompt('New request name:');
+                        if (!name) return;
+
+                        // Save a snapshot of the current request into the folder
+                        state.collections[collectionIdx].folders[folderIdx].requests.push({ ...structuredClone(state.request), name });
+                        saveCollections();
+                        renderCollections();
+
+                        // After re-render, expand and highlight new request
+                        setTimeout(() => {
+                            const subrequestsEl = document.getElementById(`subrequests-${collectionIdx}-${folderIdx}`);
+                            const subfolderEl = document.getElementById(`subfolder-${collectionIdx}-${folderIdx}`);
+                            const subtoggleBtn = subfolderEl ? subfolderEl.querySelector('.collection-folder-toggle') : null;
+                            if (subrequestsEl) subrequestsEl.style.display = 'block';
+                            if (subtoggleBtn) subtoggleBtn.textContent = '▼';
+
+                            const reqEls = subrequestsEl ? subrequestsEl.querySelectorAll('.collection-request') : [];
+                            const newReqEl = reqEls[reqEls.length - 1];
+                            if (newReqEl) {
+                                newReqEl.style.backgroundColor = 'var(--bg-tertiary)';
+                                newReqEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                                setTimeout(() => newReqEl.style.backgroundColor = '', 500);
+                            }
+                        }, 50);
+                    });
+                }
+
+                // Handle subfolder requests
+                if (subrequests) {
+                    folderData.requests.forEach((req, reqIndex) => {
+                        const reqEl = subrequests.querySelector(`[data-collection="${index}"][data-folder="${folderIndex}"][data-request="${reqIndex}"]`);
+                        if (reqEl) {
+                            // Click handler for the request content (not the buttons)
+                            const reqContent = reqEl.querySelector('.collection-request-content');
+                            if (reqContent) {
+                                reqContent.addEventListener('click', () => {
+                                    loadCollectionRequest(req);
+                                });
+                            }
+
+                            // Edit request button handler
+                            const editReqBtn = reqEl.querySelector('.collection-request-edit-btn');
+                            if (editReqBtn) {
+                                editReqBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const collectionIdx = parseInt(editReqBtn.dataset.collection);
+                                    const folderIdx = parseInt(editReqBtn.dataset.folder);
+                                    const reqIdx = parseInt(editReqBtn.dataset.request);
+                                    const request = state.collections[collectionIdx].folders[folderIdx].requests[reqIdx];
+                                    const newName = prompt('Edit request name:', request.name || request.url);
+                                    if (!newName) return;
+
+                                    state.collections[collectionIdx].folders[folderIdx].requests[reqIdx].name = newName.trim();
+                                    saveCollections();
+                                    renderCollections();
+                                });
+                            }
+
+                            // Move request button handler
+                            const moveReqBtn = reqEl.querySelector('.collection-request-move-btn');
+                            if (moveReqBtn) {
+                                moveReqBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const collectionIdx = parseInt(moveReqBtn.dataset.collection);
+                                    const folderIdx = parseInt(moveReqBtn.dataset.folder);
+                                    const reqIdx = parseInt(moveReqBtn.dataset.request);
+                                    const request = state.collections[collectionIdx].folders[folderIdx].requests[reqIdx];
+
+                                    // Show available collections/folders to move to
+                                    const availableTargets = [];
+                                    state.collections.forEach((col, colIdx) => {
+                                        availableTargets.push({ type: 'collection', index: colIdx, name: col.name });
+                                        if (col.folders) {
+                                            col.folders.forEach((fold, foldIdx) => {
+                                                availableTargets.push({ type: 'folder', collectionIndex: colIdx, folderIndex: foldIdx, name: `${col.name} > ${fold.name}` });
+                                            });
+                                        }
+                                    });
+
+                                    const targetNames = availableTargets.map((target, idx) => `${idx + 1}. ${target.name}`);
+                                    const choice = prompt(`Move "${request.name || request.url}" to:\n${targetNames.join('\n')}`, '1');
+                                    if (!choice) return;
+
+                                    const targetIndex = parseInt(choice) - 1;
+                                    if (targetIndex < 0 || targetIndex >= availableTargets.length) return;
+
+                                    const target = availableTargets[targetIndex];
+
+                                    // Remove from current location
+                                    const [movedRequest] = state.collections[collectionIdx].folders[folderIdx].requests.splice(reqIdx, 1);
+
+                                    // Add to new location
+                                    if (target.type === 'collection') {
+                                        if (!state.collections[target.index].requests) state.collections[target.index].requests = [];
+                                        state.collections[target.index].requests.push(movedRequest);
+                                    } else {
+                                        state.collections[target.collectionIndex].folders[target.folderIndex].requests.push(movedRequest);
+                                    }
+
+                                    saveCollections();
+                                    renderCollections();
+                                });
+                            }
+
+                            // Duplicate request button handler
+                            const duplicateReqBtn = reqEl.querySelector('.collection-request-duplicate-btn');
+                            if (duplicateReqBtn) {
+                                duplicateReqBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    const collectionIdx = parseInt(duplicateReqBtn.dataset.collection);
+                                    const folderIdx = parseInt(duplicateReqBtn.dataset.folder);
+                                    const reqIdx = parseInt(duplicateReqBtn.dataset.request);
+                                    const request = state.collections[collectionIdx].folders[folderIdx].requests[reqIdx];
+
+                                    const duplicatedRequest = { ...structuredClone(request) };
+                                    duplicatedRequest.name = `${request.name || request.url} Copy`;
+
+                                    state.collections[collectionIdx].folders[folderIdx].requests.splice(reqIdx + 1, 0, duplicatedRequest);
+                                    saveCollections();
+                                    renderCollections();
+                                });
+                            }
+
+                            // Delete request button handler
+                            const deleteReqBtn = reqEl.querySelector('.collection-request-delete-btn');
+                            if (deleteReqBtn) {
+                                deleteReqBtn.addEventListener('click', async (e) => {
+                                    e.stopPropagation();
+                                    const collectionIdx = parseInt(deleteReqBtn.dataset.collection);
+                                    const folderIdx = parseInt(deleteReqBtn.dataset.folder);
+                                    const reqIdx = parseInt(deleteReqBtn.dataset.request);
+                                    const request = state.collections[collectionIdx].folders[folderIdx].requests[reqIdx];
+
+                                    const { dialog } = window.__TAURI__;
+                                    const confirmed = await dialog.confirm(`Delete request "${request.name || request.url}"?`, {
+                                        title: 'Delete Request',
+                                        type: 'warning'
+                                    });
+
+                                    if (confirmed) {
+                                        state.collections[collectionIdx].folders[folderIdx].requests.splice(reqIdx, 1);
+                                        saveCollections();
+                                        renderCollections();
+                                    }
+                                });
+                            }
+                        }
+                    });
                 }
             });
         }
