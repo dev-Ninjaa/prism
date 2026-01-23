@@ -324,16 +324,26 @@ function renderCollections() {
                 const idx = parseInt(deleteBtn.dataset.index);
                 const collection = state.collections[idx];
                 
-                const { dialog } = window.__TAURI__;
-                const confirmed = await dialog.confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`, {
-                    title: 'Delete Collection',
-                    type: 'warning'
-                });
+                const tauri = window.__TAURI__;
+                const dialog = tauri?.dialog || tauri?.core?.dialog;
                 
-                if (confirmed) {
-                    state.collections.splice(idx, 1);
-                    saveCollections();
-                    renderCollections();
+                if (dialog) {
+                    const confirmed = await dialog.confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`, {
+                        title: 'Delete Collection',
+                        type: 'warning'
+                    });
+                    
+                    if (confirmed) {
+                        state.collections.splice(idx, 1);
+                        saveCollections();
+                        renderCollections();
+                    }
+                } else {
+                    if (confirm(`Delete collection "${collection.name}" and all its ${collection.requests.length} requests?`)) {
+                        state.collections.splice(idx, 1);
+                        saveCollections();
+                        renderCollections();
+                    }
                 }
             });
         }
@@ -390,11 +400,18 @@ function renderCollections() {
                         const folderIdx = parseInt(subfolderDeleteBtn.dataset.folder);
                         const folder = state.collections[collectionIdx].folders[folderIdx];
 
-                        const { dialog } = window.__TAURI__;
-                        const confirmed = await dialog.confirm(`Delete folder "${folder.name}" and all its ${folder.requests.length} requests?`, {
-                            title: 'Delete Folder',
-                            type: 'warning'
-                        });
+                        const tauri = window.__TAURI__;
+                        const dialog = tauri?.dialog || tauri?.core?.dialog;
+                        
+                        let confirmed = false;
+                        if (dialog) {
+                            confirmed = await dialog.confirm(`Delete folder "${folder.name}" and all its ${folder.requests.length} requests?`, {
+                                title: 'Delete Folder',
+                                type: 'warning'
+                            });
+                        } else {
+                            confirmed = confirm(`Delete folder "${folder.name}" and all its ${folder.requests.length} requests?`);
+                        }
 
                         if (confirmed) {
                             state.collections[collectionIdx].folders.splice(folderIdx, 1);
@@ -543,11 +560,18 @@ function renderCollections() {
                                     const reqIdx = parseInt(deleteReqBtn.dataset.request);
                                     const request = state.collections[collectionIdx].folders[folderIdx].requests[reqIdx];
 
-                                    const { dialog } = window.__TAURI__;
-                                    const confirmed = await dialog.confirm(`Delete request "${request.name || request.url}"?`, {
-                                        title: 'Delete Request',
-                                        type: 'warning'
-                                    });
+                                    const tauri = window.__TAURI__;
+                                    const dialog = tauri?.dialog || tauri?.core?.dialog;
+
+                                    let confirmed = false;
+                                    if (dialog) {
+                                        confirmed = await dialog.confirm(`Delete request "${request.name || request.url}"?`, {
+                                            title: 'Delete Request',
+                                            type: 'warning'
+                                        });
+                                    } else {
+                                        confirmed = confirm(`Delete request "${request.name || request.url}"?`);
+                                    }
 
                                     if (confirmed) {
                                         state.collections[collectionIdx].folders[folderIdx].requests.splice(reqIdx, 1);
@@ -908,31 +932,57 @@ async function initSidebar() {
         const exportCollectionsBtn = document.getElementById('exportCollectionsBtn');
         if (exportCollectionsBtn) {
             exportCollectionsBtn.addEventListener('click', async () => {
+                const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+                const getDialog = () => window.__TAURI__?.dialog || window.__TAURI__?.core?.dialog;
+
                 if (state.collections.length === 0) {
-                    const { dialog } = window.__TAURI__;
-                    await dialog.message('No collections to export', {
-                        title: 'Export Collections',
-                        type: 'info'
-                    });
+                    const dialog = getDialog();
+                    if (dialog) {
+                        await dialog.message('No collections to export', {
+                            title: 'Export Collections',
+                            type: 'info'
+                        });
+                    } else {
+                        alert('No collections to export');
+                    }
                     return;
                 }
 
-                const exportData = {
-                    version: '1.0',
-                    exportedAt: new Date().toISOString(),
-                    collections: state.collections
-                };
+                try {
+                    const exportData = {
+                        version: '1.0',
+                        exportedAt: new Date().toISOString(),
+                        collections: state.collections
+                    };
 
-                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `prism-collections-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
+                    // Call Tauri command to save collections
+                    const invoke = getInvoke();
+                    if (!invoke) throw new Error('Tauri invoke not found');
+                    
+                    await invoke('save_collections', { collections: exportData });
+
+                    const dialog = getDialog();
+                    if (dialog) {
+                        await dialog.message('Collections exported successfully!', {
+                            title: 'Export Complete',
+                            type: 'info'
+                        });
+                    } else {
+                        alert('Collections exported successfully!');
+                    }
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    const dialog = getDialog();
+                    if (dialog) {
+                        await dialog.message(`Failed to export collections: ${error.message}`, {
+                            title: 'Export Error',
+                            type: 'error'
+                        });
+                    } else {
+                        alert(`Failed to export collections: ${error.message}`);
+                    }
+                }
+
                 // Close dropdown
                 const dropdown = document.getElementById('collectionsDropdown');
                 if (dropdown) dropdown.classList.remove('show');
@@ -972,11 +1022,18 @@ async function initSidebar() {
                         
                         if (conflicts.length > 0) {
                             // Use Tauri dialog instead of browser confirm
-                            const { dialog } = window.__TAURI__;
-                            const confirmed = await dialog.confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`, {
-                                title: 'Import Collections',
-                                type: 'warning'
-                            });
+                            const tauri = window.__TAURI__;
+                            const dialog = tauri?.dialog || tauri?.core?.dialog;
+                            
+                            let confirmed = false;
+                            if (dialog) {
+                                confirmed = await dialog.confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`, {
+                                    title: 'Import Collections',
+                                    type: 'warning'
+                                });
+                            } else {
+                                confirmed = confirm(`${conflicts.length} collection(s) already exist. Rename imported collections to avoid conflicts?`);
+                            }
                             
                             if (confirmed) {
                                 importData.collections.forEach(collection => {
@@ -993,10 +1050,14 @@ async function initSidebar() {
                                 const nonConflicting = importData.collections.filter(c => !existingNames.includes(c.name));
                                 mergedCollections = [...state.collections, ...nonConflicting];
                                 if (nonConflicting.length < importData.collections.length) {
-                                    await dialog.message(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`, {
-                                        title: 'Import Complete',
-                                        type: 'info'
-                                    });
+                                    if (dialog) {
+                                        await dialog.message(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`, {
+                                            title: 'Import Complete',
+                                            type: 'info'
+                                        });
+                                    } else {
+                                        alert(`${importData.collections.length - nonConflicting.length} collection(s) were skipped due to name conflicts.`);
+                                    }
                                 }
                             }
                         } else {
@@ -1007,17 +1068,28 @@ async function initSidebar() {
                         saveCollections();
                         renderCollections();
                         
-                        await dialog.message(`Successfully imported ${importData.collections.length} collection(s).`, {
-                            title: 'Import Complete',
-                            type: 'info'
-                        });
+                        const tauri = window.__TAURI__;
+                        const dialog = tauri?.dialog || tauri?.core?.dialog;
+                        if (dialog) {
+                            await dialog.message(`Successfully imported ${importData.collections.length} collection(s).`, {
+                                title: 'Import Complete',
+                                type: 'info'
+                            });
+                        } else {
+                            alert(`Successfully imported ${importData.collections.length} collection(s).`);
+                        }
                         
                     } catch (error) {
-                        const { dialog } = window.__TAURI__;
-                        await dialog.message(`Failed to import collections: ${error.message}`, {
-                            title: 'Import Error',
-                            type: 'error'
-                        });
+                        const tauri = window.__TAURI__;
+                        const dialog = tauri?.dialog || tauri?.core?.dialog;
+                        if (dialog) {
+                            await dialog.message(`Failed to import collections: ${error.message}`, {
+                                title: 'Import Error',
+                                type: 'error'
+                            });
+                        } else {
+                            alert(`Failed to import collections: ${error.message}`);
+                        }
                     }
                 };
                 reader.readAsText(file);
@@ -1031,27 +1103,37 @@ async function initSidebar() {
         const clearAllCollectionsBtn = document.getElementById('clearAllCollectionsBtn');
         if (clearAllCollectionsBtn) {
             clearAllCollectionsBtn.addEventListener('click', async () => {
+                const tauri = window.__TAURI__;
+                const dialog = tauri?.dialog || tauri?.core?.dialog;
+
                 if (state.collections.length === 0) {
-                    const { dialog } = window.__TAURI__;
-                    await dialog.message('No collections to clear', {
-                        title: 'Clear Collections',
-                        type: 'info'
-                    });
+                    if (dialog) {
+                        await dialog.message('No collections to clear', {
+                            title: 'Clear Collections',
+                            type: 'info'
+                        });
+                    } else {
+                        alert('No collections to clear');
+                    }
                     return;
                 }
                 
-                const { dialog } = window.__TAURI__;
-                const confirmClear = await dialog.confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`, {
-                    title: 'Clear All Collections',
-                    type: 'warning'
-                });
+                let confirmClear = false;
+                if (dialog) {
+                    confirmClear = await dialog.confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`, {
+                        title: 'Clear All Collections',
+                        type: 'warning'
+                    });
+                } else {
+                    confirmClear = confirm(`Delete all ${state.collections.length} collections and their ${state.collections.reduce((sum, c) => sum + c.requests.length, 0)} requests?`);
+                }
                 
                 if (confirmClear) {
                     state.collections = [];
                     saveCollections();
                     renderCollections();
                 }
-                
+
                 // Close dropdown
                 const dropdown = document.getElementById('collectionsDropdown');
                 if (dropdown) dropdown.classList.remove('show');
