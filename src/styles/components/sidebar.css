@@ -14,6 +14,125 @@
     letter-spacing: 0.8px;
 }
 
+.collections-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+    min-height: 100px;
+}
+
+.collection-item {
+    margin-bottom: var(--spacing-sm);
+}
+
+.collection-folder {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background 120ms ease;
+    width: 100%;
+    text-align: left;
+}
+
+.collection-folder:hover {
+    background: var(--bg-panel-alt);
+}
+
+.collection-folder-toggle {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+    width: 16px;
+    flex-shrink: 0;
+}
+
+.collection-requests {
+    margin-left: var(--spacing-lg);
+    margin-top: var(--spacing-xs);
+}
+
+.collection-request {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 120ms ease;
+    font-size: 11px;
+    text-align: left;
+    width: 100%;
+}
+
+.collection-request:hover {
+    background: var(--bg-panel-alt);
+}
+
+.sidebar-resize-handle-vertical {
+    height: 4px;
+    background: var(--border-subtle);
+    cursor: ns-resize;
+    position: relative;
+    flex-shrink: 0;
+    transition: background 120ms ease;
+}
+
+.sidebar-resize-handle-vertical:hover {
+    background: var(--border-color);
+}
+
+.sidebar-resize-handle-vertical::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    cursor: ns-resize;
+}
+
+.sidebar-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.section-header h3 {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 0;
+}
+
+.section-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
 .history-list {
     flex: 1;
     overflow-y: auto;
