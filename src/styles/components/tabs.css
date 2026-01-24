@@ -58,12 +58,56 @@
 
 #envPanel .kv-row {
     margin-bottom: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 #envPanel .env-key {
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    width: 180px;
+}
+
+#envPanel .env-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+#envPanel .env-value {
+    width: 100%;
+}
+
+#envPanel .btn-mask,
+#envPanel .btn-copy,
+#envPanel .btn-delete-env {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+}
+
+#envPanel .btn-mask:hover,
+#envPanel .btn-copy:hover,
+#envPanel .btn-delete-env:hover {
+    background: var(--bg-panel-alt);
+}
+
+#envPanel .env-actions {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+#envPanel .env-error {
+    color: var(--error);
+    font-size: 12px;
+    margin-left: 8px;
 }
 
 #envPanel .empty-state {

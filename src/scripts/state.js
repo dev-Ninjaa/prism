@@ -22,7 +22,12 @@ const state = {
     collections: []
 };
 
-const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+if (typeof window.getInvoke === 'undefined') {
+    window.getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+}
+if (typeof window.getDialog === 'undefined') {
+    window.getDialog = () => window.__TAURI__?.dialog || window.__TAURI__?.core?.dialog;
+}
 
 // State management functions
 function updateRequest(updates) {
@@ -39,7 +44,7 @@ function setResponse(response) {
 
 async function clearHistory() {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) return;
         await invoke('clear_history');
         state.history = [];
@@ -51,7 +56,7 @@ async function clearHistory() {
 
 async function loadHistory() {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) return;
         const history = await invoke('get_history');
         state.history = history;
@@ -64,7 +69,7 @@ async function loadHistory() {
 // Environment variables management
 async function loadEnvVars() {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) return;
         const envVars = await invoke('get_env_vars');
         state.envVars = envVars;
@@ -74,21 +79,21 @@ async function loadEnvVars() {
     }
 }
 
-async function setEnvVar(key, value) {
+async function setEnvVar(key, value, enabled = true) {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) return;
-        await invoke('set_env_var', { key, value });
+        await invoke('set_env_var', { key, value, enabled });
         await loadEnvVars();
     } catch (e) {
         console.error('Failed to set env var:', e);
         throw e;
     }
-}
+} 
 
 async function deleteEnvVar(key) {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) return;
         await invoke('delete_env_var', { key });
         await loadEnvVars();

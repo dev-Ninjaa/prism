@@ -283,10 +283,13 @@
     background: rgba(220, 53, 69, 0.1);
     color: var(--error);
 }
+
+.collection-request {
     text-align: left;
     width: 100%;
 }
 
+/* parser refresh: no-op comment to help language server reparse */
 .collection-request:hover {
     background: var(--bg-panel-alt);
 }

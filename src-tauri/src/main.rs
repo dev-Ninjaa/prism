@@ -69,9 +69,40 @@ fn get_env_vars(state: State<'_, AppState>) -> Result<Vec<EnvVar>, String> {
 }
 
 #[tauri::command]
-fn set_env_var(key: String, value: String, state: State<'_, AppState>) -> Result<(), String> {
-    state.env_store.set(&key, &value)
+fn set_env_var(key: String, value: String, enabled: Option<bool>, state: State<'_, AppState>) -> Result<(), String> {
+    let en = enabled.unwrap_or(true);
+    state.env_store.set(&key, &value, en)
         .map_err(|e| format!("Failed to set env var: {}", e))
+}
+
+#[tauri::command]
+async fn export_env_vars(app: AppHandle, state: State<'_, AppState>) -> Result<(), String> {
+    use tauri_plugin_dialog::{DialogExt, FilePath};
+    use std::fs;
+
+    let vars = state.env_store.get_all().map_err(|e| format!("Failed to fetch env vars: {}", e))?;
+    let export = serde_json::json!({
+        "version": "1.0",
+        "exportedAt": chrono::Utc::now().to_rfc3339(),
+        "env": vars,
+    });
+
+    let file_path = app.dialog()
+        .file()
+        .set_title("Export Environment Variables")
+        .add_filter("JSON Files", &["json"])
+        .set_file_name("env-vars.json")
+        .blocking_save_file();
+
+    if let Some(path) = file_path {
+        let path_str = match path {
+            FilePath::Path(p) => p.to_str().ok_or_else(|| "Invalid file path".to_string())?.to_string(),
+            FilePath::Url(_u) => return Err("URL paths not supported".to_string()),
+        };
+        fs::write(path_str, serde_json::to_string_pretty(&export).map_err(|e| e.to_string())?).map_err(|e| format!("Failed to write file: {}", e))?;
+    }
+
+    Ok(())
 }
 
 #[tauri::command]
@@ -257,7 +288,8 @@ fn main() {
             delete_env_var,
             save_request,
             load_request,
-            save_collections
+            save_collections,
+            export_env_vars
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

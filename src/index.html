@@ -277,7 +277,12 @@
                         <div class="key-value-editor" id="envVarsList">
                             <!-- Env vars will be rendered here -->
                         </div>
-                        <button class="btn-secondary btn-add" id="addEnvVarBtn">+ Add Variable</button>
+                        <div class="env-actions">
+                            <button class="btn-secondary btn-add" id="addEnvVarBtn">+ Add Variable</button>
+                            <button class="btn-secondary" id="exportEnvBtn">Export Variables</button>
+                            <button class="btn-secondary" id="importEnvBtn">Import Variables</button>
+                            <input type="file" id="importEnvInput" accept=".json" style="display:none">
+                        </div>
                     </div>
                 </div>
             </section>
