@@ -932,11 +932,10 @@ async function initSidebar() {
         const exportCollectionsBtn = document.getElementById('exportCollectionsBtn');
         if (exportCollectionsBtn) {
             exportCollectionsBtn.addEventListener('click', async () => {
-                const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
-                const getDialog = () => window.__TAURI__?.dialog || window.__TAURI__?.core?.dialog;
+                const invoke = window.getInvoke ? window.getInvoke() : null;
+                const dialog = window.getDialog ? window.getDialog() : null;
 
                 if (state.collections.length === 0) {
-                    const dialog = getDialog();
                     if (dialog) {
                         await dialog.message('No collections to export', {
                             title: 'Export Collections',
@@ -956,12 +955,10 @@ async function initSidebar() {
                     };
 
                     // Call Tauri command to save collections
-                    const invoke = getInvoke();
                     if (!invoke) throw new Error('Tauri invoke not found');
                     
                     await invoke('save_collections', { collections: exportData });
 
-                    const dialog = getDialog();
                     if (dialog) {
                         await dialog.message('Collections exported successfully!', {
                             title: 'Export Complete',
@@ -972,7 +969,6 @@ async function initSidebar() {
                     }
                 } catch (error) {
                     console.error('Export failed:', error);
-                    const dialog = getDialog();
                     if (dialog) {
                         await dialog.message(`Failed to export collections: ${error.message}`, {
                             title: 'Export Error',
