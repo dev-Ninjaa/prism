@@ -194,7 +194,7 @@ async function handleSendRequest() {
     if (btnLoader) btnLoader.style.display = 'inline-block';
 
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
 
         if (!invoke) {
             throw new Error('Tauri invoke not found. Are you running in a web browser?');
@@ -226,7 +226,7 @@ async function handleSendRequest() {
     }
 }
 
-const getInvoke = () => window.__TAURI__?.core?.invoke || window.__TAURI__?.invoke;
+/* global getInvoke is provided by state.js via window.getInvoke */
 
 async function handleExportCurl() {
     if (!state.request.url.trim()) {
@@ -235,7 +235,7 @@ async function handleExportCurl() {
     }
 
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) {
             throw new Error('Tauri invoke not found');
         }
@@ -270,7 +270,7 @@ async function handleSaveRequest() {
     }
 
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) {
             throw new Error('Tauri invoke not found');
         }
@@ -296,7 +296,7 @@ async function handleSaveRequest() {
 
 async function handleLoadRequest() {
     try {
-        const invoke = getInvoke();
+        const invoke = window.getInvoke ? window.getInvoke() : null;
         if (!invoke) {
             throw new Error('Tauri invoke not found');
         }
