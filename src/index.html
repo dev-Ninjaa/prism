@@ -19,19 +19,117 @@
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h2>History</h2>
-                <button class="btn-icon" id="clearHistory" title="Clear history">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M2 4h12M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1m2 0v9a2 2 0 01-2 2h-5a2 2 0 01-2-2V4h9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <button class="btn-icon" id="toggleSidebar" title="Toggle sidebar" aria-label="Toggle sidebar">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M10 12l-6-6M4 12l6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                     </svg>
                 </button>
+                <h2>Collections</h2>
+                <div class="header-actions">
+                    <div class="dropdown-menu">
+                        <button class="btn-icon" id="collectionsMenuBtn" title="Collections menu" aria-label="Collections menu">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                <circle cx="8" cy="2" r="1.5" fill="currentColor"/>
+                                <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+                                <circle cx="8" cy="14" r="1.5" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-content" id="collectionsDropdown">
+                            <button class="dropdown-item" id="exportCollectionsBtn">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M2 10V12C2 13.1046 2.89543 14 4 14H12C13.1046 14 14 13.1046 14 12V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M11 6L8 9L5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 9V2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Export Collections
+                            </button>
+                            <button class="dropdown-item" id="importCollectionsBtn">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M14 10V12C14 13.1046 13.1046 14 12 14H4C2.89543 14 2 13.1046 2 12V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M5 6L8 9L11 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 2V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Import Collections
+                            </button>
+                            <button class="dropdown-item" id="clearAllCollectionsBtn">
+                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M12 4H4V12C4 13.1046 4.89543 14 6 14H10C11.1046 14 12 13.1046 12 12V4Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M8 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M6 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 8V10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M2 4H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="M10 2H6C5.44772 2 5 2.44772 5 3V4H11V3C11 2.44772 10.5523 2 10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Clear All Collections
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn-icon" id="helpBtn" title="Keyboard shortcuts" aria-label="Keyboard shortcuts">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+                            <path d="M6 6h2v2H8a1 1 0 0 0 0 2h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="8.5" cy="10.5" r="0.5" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.5 1.5M11 11l1.5 1.5M3.5 12.5l1.5-1.5M11 5l1.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            <circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/>
+                        </svg>
+                    </button>
+                    <button class="btn-icon" id="newCollectionBtn" title="New Collection" aria-label="New Collection">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="history-list" id="historyList">
-                <div class="empty-state">No requests yet</div>
+            <div class="sidebar-search">
+                <input type="text" id="collectionSearch" placeholder="Search collections..." class="search-input">
+            </div>
+            <div class="collections-list" id="collectionsList">
+                <!-- Collections will be rendered here -->
+            </div>
+            <!-- Hidden file input for import -->
+            <input type="file" id="importFileInput" accept=".json" style="display: none;">
+            <div class="sidebar-resize-handle-vertical" id="historyResizeHandle"></div>
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <h3>History</h3>
+                    <div class="section-actions">
+                        <button class="btn-icon" id="historySettingsBtn" title="History Settings">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M8 4v1M8 11v1M6 6l1 1M9 9l1 1M6 10l1-1M9 7l1-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                        <button class="btn-icon" id="clearHistory" title="Clear history">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 4h12M5.5 4V3a1 1 0 011-1h3a1 1 0 011 1v1m2 0v9a2 2 0 01-2 2h-5a2 2 0 01-2-2V4h9z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="sidebar-search">
+                    <input type="text" id="historySearch" placeholder="Search history..." class="search-input">
+                </div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">No requests yet</div>
+                </div>
             </div>
         </aside>
+
+        <!-- Horizontal Resizer -->
+        <div class="resizer horizontal" id="sidebarResizer"></div>
+
+        <!-- Collapsed Sidebar Toggle -->
+        <button class="btn-icon collapsed-toggle" id="collapsedToggle" title="Show sidebar" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 4l6 6M12 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
 
         <!-- Main Content -->
         <main class="main-content">
@@ -66,10 +164,22 @@
                             <path d="M4 8h2v1H4zm3 0h5v1H7zm-3 2h5v1H4z" fill="currentColor"/>
                         </svg>
                     </button>
+                    <button class="btn-secondary" id="generateCodeBtn" title="Generate Code">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M13 2H3c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm0 11H3V3h10v10z" fill="currentColor"/>
+                            <path d="M5 5h6v1H5zm0 2h4v1H5zm0 2h6v1H5z" fill="currentColor"/>
+                        </svg>
+                    </button>
                     <button class="btn-secondary" id="saveRequestBtn" title="Save Request">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                             <path d="M13 2H3c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h10c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 1v3H4V3h8zM3 13V7h10v6H3z" fill="currentColor"/>
                             <path d="M5 4h1v2H5zm5 6H6v3h4v-3z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <button class="btn-secondary" id="saveToCollectionBtn" title="Save to Collection">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M2 3h12v10H2z" fill="currentColor"/>
+                            <path d="M4 5h8v1H4zm0 2h6v1H4zm0 2h8v1H4z" fill="currentColor"/>
                         </svg>
                     </button>
                     <button class="btn-secondary" id="loadRequestBtn" title="Load Request">
@@ -82,13 +192,22 @@
             </section>
 
             <!-- Request Editor -->
-            <section class="request-editor">
-                <div class="tabs">
-                    <button class="tab-btn active" data-tab="params">Params</button>
-                    <button class="tab-btn" data-tab="auth">Auth</button>
-                    <button class="tab-btn" data-tab="headers">Headers</button>
-                    <button class="tab-btn" data-tab="body">Body</button>
-                    <button class="tab-btn" data-tab="env">Env</button>
+            <section class="request-editor" id="requestEditor">
+                <div class="editor-header">
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="params">Params</button>
+                        <button class="tab-btn" data-tab="auth">Auth</button>
+                        <button class="tab-btn" data-tab="headers">Headers</button>
+                        <button class="tab-btn" data-tab="body">Body</button>
+                        <button class="tab-btn" data-tab="env">Env</button>
+                    </div>
+                    <div class="editor-actions">
+                        <button class="btn-icon" id="splitViewBtn" title="Toggle Split View">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="tab-content">
@@ -126,7 +245,28 @@
 
                     <!-- Body Tab -->
                     <div class="tab-panel" id="bodyPanel">
-                        <textarea class="body-editor" placeholder='{\n  "key": "value"\n}'></textarea>
+                        <div class="body-options">
+                            <label>
+                                <input type="radio" name="bodyType" value="raw" checked> Raw
+                            </label>
+                            <label>
+                                <input type="radio" name="bodyType" value="form-data"> Form Data
+                            </label>
+                        </div>
+                        <div id="rawBody">
+                            <textarea class="body-editor" placeholder='{\n  "key": "value"\n}'></textarea>
+                        </div>
+                        <div id="formDataBody" style="display: none;">
+                            <div class="key-value-editor" id="formDataList">
+                                <!-- Form data will be rendered here -->
+                            </div>
+                            <button class="btn-secondary btn-add" id="addFormDataBtn">+ Add Field</button>
+                            <div class="file-upload">
+                                <input type="file" id="fileInput" multiple style="display: none;">
+                                <button class="btn-secondary" id="uploadFileBtn">Upload Files</button>
+                                <div id="fileList"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Env Tab -->
@@ -155,6 +295,16 @@
                 <div class="tabs">
                     <button class="tab-btn active" data-tab="response-body">Body</button>
                     <button class="tab-btn" data-tab="response-headers">Headers</button>
+                </div>
+
+                <div class="response-controls">
+                    <button class="btn-secondary btn-small" id="prettyPrintBtn">Pretty Print</button>
+                    <button class="btn-secondary btn-small" id="rawViewBtn">Raw</button>
+                    <button class="btn-secondary btn-small" id="fullscreenBtn" title="Fullscreen">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                            <path d="M3 7V3h4M13 7V3h-4M3 13h4v-4M13 13h-4v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <div class="tab-content">

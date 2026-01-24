@@ -6,9 +6,28 @@ Deterministic REST API for testing Prism.
 
 1.  Navigate to this directory: `cd test/api`
 2.  Install dependencies: `npm install`
-3.  Start the server: `npm start`
+3.  Start the server: `npm start` or `npm run start:with-instructions`
 
 The server will start at `http://localhost:3000`.
+
+**Note:** Use `npm run start:with-instructions` for helpful setup information and import instructions.
+
+## Importing Test Collections into Prism
+
+A ready-to-import JSON file is available: `prism-test-collections.json`
+
+**To import:**
+1. Open Prism
+2. Click the 3-dots menu (⋮) in the Collections sidebar
+3. Select "Import Collections"
+4. Choose the `prism-test-collections.json` file
+5. The collections will be imported with conflict resolution if needed
+
+**Collections included:**
+- **Basic API Tests**: GET users, POST user, echo request, error test
+- **API Hardening Tests**: Query params, headers, JSON/text body, URL params
+- **Authentication Tests**: Bearer token, Basic auth, API key (header/query)
+- **Advanced Tests**: Mixed request with all components, invalid JSON test
 
 ## Endpoints to Test in Prism
 

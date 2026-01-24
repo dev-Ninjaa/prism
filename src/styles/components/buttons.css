@@ -42,9 +42,9 @@
 }
 
 .btn-secondary:hover {
-    background: var(--bg-panel-alt);
+    background: var(--bg-hover);
     color: var(--text-primary);
-    border-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-color);
 }
 
 .btn-icon {

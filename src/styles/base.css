@@ -61,6 +61,15 @@ button:focus-visible {
     background: rgba(255, 255, 255, 0.15);
 }
 
+/* Light theme scrollbar */
+body.light-theme ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+body.light-theme ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
 .empty-state {
     padding: var(--spacing-2xl) var(--spacing-xl);
     text-align: center;
