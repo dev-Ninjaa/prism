@@ -49,28 +49,73 @@ Prism is a **local-first** API testing tool that puts you in control.
 
 ---
 
-## Screenshots
+## Why Local-First?
 
-*Note: Add actual screenshots to `/docs/screenshots/` for production*
+### Privacy
+- No account required
+- No data sent to cloud
+- No telemetry or tracking
+- Your API keys stay on your machine
 
+### Portability
+- Request files are plain JSON
+- Commit to Git with your code
+- Share via any method (Git, email, Slack)
+- No vendor lock-in
+
+### Performance
+- Native Rust HTTP engine
+- No network overhead for UI
+- Instant startup
+- Low memory footprint (~50MB)
+
+### Simplicity
+- No sync conflicts
+- No subscription
+- No internet required (except for requests)
+- Works offline
+
+---
+
+## Future Scope
+
+Potential additions (not committed):
+- Collections/folders UI
+- Request chaining
+- GraphQL support
+- WebSocket testing
+- Response history
+- Import from Postman/Insomnia
+
+---
+
+## Architecture
+
+Prism is built with a simple and powerful architecture that separates the frontend UI from the backend logic.
+
+```mermaid
+graph TD;
+    A[Frontend - Web UI <br/> HTML/CSS/JS] -->|Tauri IPC| B(Backend - Rust);
+    B --> C{HTTP Engine <br/> (reqwest)};
+    C --> D[External API];
+    B --> E{Storage <br/> (SQLite)};
+    B --> F{Workspace <br/> (File I/O)};
 ```
-┌─────────────────────────────────────────────────────────┐
-│  History    │  GET  https://api.example.com/users  [Send]│
-│             ├─────────────────────────────────────────────┤
-│  • GET /users│  Params │ Auth │ Headers │ Body │ Env     │
-│  • POST /login│                                           │
-│  • GET /posts│  [Request configuration area]             │
-│             │                                             │
-│             ├─────────────────────────────────────────────┤
-│             │  Response                                   │
-│             │  Status: 200 OK  Time: 245ms  Size: 1.2KB  │
-│             │                                             │
-│             │  {                                          │
-│             │    "id": 1,                                 │
-│             │    "name": "John Doe"                       │
-│             │  }                                          │
-└─────────────────────────────────────────────────────────┘
-```
+
+---
+
+## Documentation
+
+| Document                  | Description                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Explains the technical architecture, data flow, and technology stack of the application.                  |
+| [BUILD.md](docs/BUILD.md)         | A complete guide to building Prism from source, including prerequisites and platform-specific instructions. |
+| [CHANGELOG.md](docs/CHANGELOG.md)     | A log of all notable changes made to Prism, organized by version.                                        |
+| [ENV_VARIABLES_GUIDE.md](docs/ENV_VARIABLES_GUIDE.md) | A guide on how to use environment variables for dynamic API testing.                                     |
+| [FILE_SAVE_LOAD_GUIDE.md](docs/FILE_SAVE_LOAD_GUIDE.md) | Explains how to save and load API requests as JSON files.                                                |
+| [QUICKSTART.md](docs/QUICKSTART.md)     | A quick start guide to get the application running.                                                      |
+| [RUN.md](docs/RUN.md)           | Detailed instructions on how to run the Prism application.                                               |
+| [SETUP_INSTRUCTIONS.md](docs/SETUP_INSTRUCTIONS.md) | Step-by-step instructions for setting up the development environment.                                    |
 
 ---
 
@@ -108,36 +153,6 @@ cargo tauri build
 ```
 
 The compiled application will be in the `src-tauri/target/release` directory.
-
----
-
-## Architecture
-
-Prism is built with a simple and powerful architecture that separates the frontend UI from the backend logic.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Frontend (Web UI)                    │
-│              HTML + CSS + Vanilla JavaScript            │
-│  • Request builder  • Response viewer  • History UI     │
-└────────────────────────┬────────────────────────────────┘
-                         │ Tauri IPC
-┌────────────────────────▼────────────────────────────────┐
-│                   Backend (Rust)                        │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  HTTP Engine (reqwest)                           │  │
-│  │  • Request execution  • Auth  • Var resolution   │  │
-│  └──────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Storage (SQLite)                                │  │
-│  │  • History  • Environment variables              │  │
-│  └──────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │  Workspace (File I/O)                            │  │
-│  │  • Save/load requests as JSON                    │  │
-│  └──────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
 
 ---
 
