@@ -94,12 +94,21 @@ Potential additions (not committed):
 Prism is built with a simple and powerful architecture that separates the frontend UI from the backend logic.
 
 ```mermaid
-graph TD;
-    A[Frontend - Web UI <br/> HTML/CSS/JS] -->|Tauri IPC| B(Backend - Rust);
-    B --> C{HTTP Engine <br/> (reqwest)};
-    C --> D[External API];
-    B --> E{Storage <br/> (SQLite)};
-    B --> F{Workspace <br/> (File I/O)};
+graph TD
+    subgraph Frontend
+        A(Web UI - HTML/CSS/JS)
+    end
+    subgraph Backend
+        B(Rust)
+        C(HTTP Engine - reqwest)
+        E(Storage - SQLite)
+        F(Workspace - File I/O)
+    end
+    A -->|Tauri IPC| B
+    B --> C
+    B --> E
+    B --> F
+    C --> D(External API)
 ```
 
 ---
